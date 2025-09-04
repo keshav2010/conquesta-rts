@@ -8,6 +8,7 @@
     "build": "webpack --config webpack.config.js",
     "start": "tsx watch gameserver/index",
     "deploy": "npx tsc && pm2-runtime start ecosystem.config.js",
+    "deploy-node": "npx tsc",
     "setup-local-infra": "node setup-local-infra.js"
   },
   "author": "keshav",
