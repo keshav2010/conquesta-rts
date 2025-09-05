@@ -91,8 +91,7 @@ export class NetworkManager {
 
     this.room.onLeave((code) => {
       console.log(`Leaving Room ${this.room?.name}, code: ${code}`);
-      this.room = null;
-      this.mapData = null;
+      this.teardownRoom();
     });
 
     this.room.onError((code, message) => {
@@ -165,12 +164,15 @@ export class NetworkManager {
 
   async disconnectGameServer() {
     try {
-      this.pingIntervalId && clearInterval(this.pingIntervalId);
-      await this.room?.leave();
+      this.teardownRoom();
     } catch (error) {
-      throw new NetworkError(NetworkErrorCode.ERROR_DURING_ROOM_DISCONNECT, "Encountered error while trying to disconnect.");
+      throw new NetworkError(
+        NetworkErrorCode.ERROR_DURING_ROOM_DISCONNECT,
+        "Encountered error while trying to disconnect."
+      );
     }
   }
+
 
   sendEventToServer<T = any>(eventType: string, data: T) {
     this.room?.send(eventType, data);
@@ -189,7 +191,7 @@ export class NetworkManager {
     let rooms = await this.client.getAvailableRooms(roomName);
     return rooms;
   }
-  async hostAndJoinSession(sessionName: string, roomOptions : {
+  async hostAndJoinSession(sessionName: string, roomOptions: {
     minPlayers: number,
     maxPlayers: number,
     spawnSelectionTimer: number
@@ -209,7 +211,7 @@ export class NetworkManager {
         maxPlayers: roomOptions.maxPlayers,
         spawnSelectionTimer: roomOptions.spawnSelectionTimer
       });
-      
+
       this.setupRoomListener();
     } catch (err) {
       console.error(err);
@@ -219,4 +221,27 @@ export class NetworkManager {
       )
     }
   }
+
+  private teardownRoom() {
+    if (this.pingIntervalId) {
+      clearInterval(this.pingIntervalId);
+      this.pingIntervalId = undefined;
+    }
+
+    if (this.room) {
+      // Safely remove all listeners to avoid leaks
+      this.room.removeAllListeners();
+
+      try {
+        this.room.leave(); // optional safeguard, in case not called yet
+      } catch (err) {
+        console.warn("[teardownRoom] error during leave:", err);
+      }
+    }
+
+    this.room = null;
+    this.mapData = null;
+    this.eventHandlersBinded = false;
+  }
+
 }

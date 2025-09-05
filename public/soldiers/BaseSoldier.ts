@@ -5,6 +5,7 @@ import SAT from "sat";
 import { NetworkManager } from "../NetworkManager";
 import { BackgroundHighlight } from "../gameObjects/BackgroundHighlight";
 import { SelectableSceneEntity } from "../scenes/BaseScene";
+import { container } from "tsyringe";
 const GAMEEVENTS = CONSTANTS.GAMEEVENTS;
 
 export class BaseSoldier
@@ -90,9 +91,7 @@ export class BaseSoldier
     return new SAT.Vector(data.x, data.y);
   }
   renderDebugMarkers() {
-    const networkManager = this?.scene?.registry?.get(
-      "networkManager"
-    ) as NetworkManager;
+    const networkManager = container.resolve(NetworkManager);
     if (!networkManager) {
       console.log(
         `Could not find network-manager for soldier :${this.id}, most likely is deleted from scene (value of scene : ${this.scene})`
