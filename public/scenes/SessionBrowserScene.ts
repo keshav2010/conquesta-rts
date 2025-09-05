@@ -2,7 +2,7 @@ import { ServerBrowserUI } from "../ui/ServerBrowserUI";
 import { BaseScene } from "./BaseScene";
 import CONSTANT from "../constant";
 import { addBackgroundImage } from "../helpers/addBackgroundImage";
-import { NetworkManager } from "../NetworkManager";
+import { NetworkManager } from "../network/NetworkManager";
 import { container } from "tsyringe";
 
 export class SessionBrowserScene extends BaseScene {

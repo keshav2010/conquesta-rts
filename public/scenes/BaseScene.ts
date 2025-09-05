@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { NetworkManager } from "../NetworkManager";
+import { NetworkManager } from "../network/NetworkManager";
 import { ClientStateManager } from "../ClientStateManager";
 import CONSTANT from "../constant";
 import { nanoid } from "nanoid";

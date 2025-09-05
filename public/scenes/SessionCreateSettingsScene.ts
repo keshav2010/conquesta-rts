@@ -1,4 +1,4 @@
-import { NetworkManager } from "../NetworkManager";
+import { NetworkManager } from "../network/NetworkManager";
 import { BaseScene } from "./BaseScene"; // Adjust import path
 import CONSTANT from "../constant";
 import { container } from "tsyringe";

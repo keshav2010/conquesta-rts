@@ -1,7 +1,7 @@
 import { PacketType } from "../../common/PacketType";
 import { PlayerState } from "../../gameserver/schema/PlayerState";
 import { SoldierState } from "../../gameserver/schema/SoldierState";
-import { NetworkManager } from "../NetworkManager";
+import { NetworkManager } from "../network/NetworkManager";
 import CONSTANT from "../constant";
 const { GAMEEVENTS } = CONSTANT;
 import SessionStateClientHelpers from "../helpers/SessionStateClientHelpers";

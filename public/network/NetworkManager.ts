@@ -2,8 +2,8 @@ import { container, inject, injectable, singleton } from "tsyringe";
 
 import * as Colyseus from "colyseus.js";
 import Phaser from "phaser";
-import { SessionState } from "../gameserver/schema/SessionState";
-import { ITiled2DMap } from '../common/ITiled2DMap';
+import { SessionState } from "../../gameserver/schema/SessionState";
+import { ITiled2DMap } from '../../common/ITiled2DMap';
 
 const URL = `${window.document.location.host.replace(/:.*/, '')}`;
 import axios from 'axios';

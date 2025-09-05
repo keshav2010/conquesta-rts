@@ -1,7 +1,7 @@
 import CONSTANT from "../constant";
 import { BaseScene } from "./BaseScene";
 import { PacketType } from "../../common/PacketType";
-import { NetworkManager } from "../NetworkManager";
+import { NetworkManager } from "../network/NetworkManager";
 import SpinnerPlugin from "phaser3-rex-plugins/templates/spinner/spinner-plugin.js";
 import Spinner from "phaser3-rex-plugins/templates/spinner/spinner/Spinner";
 import { PlayerState } from "../../gameserver/schema/PlayerState";

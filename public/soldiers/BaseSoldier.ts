@@ -2,7 +2,7 @@ import CONSTANTS from "../constant";
 import SessionStateClientHelpers from "../helpers/SessionStateClientHelpers";
 import LoadingBar from "../gameObjects/LoadingBar";
 import SAT from "sat";
-import { NetworkManager } from "../NetworkManager";
+import { NetworkManager } from "../network/NetworkManager";
 import { BackgroundHighlight } from "../gameObjects/BackgroundHighlight";
 import { SelectableSceneEntity } from "../scenes/BaseScene";
 import { container } from "tsyringe";

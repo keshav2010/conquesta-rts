@@ -1,6 +1,6 @@
 import CONSTANT from "../constant";
 import { BaseScene } from "./BaseScene";
-import { NetworkError, NetworkManager } from "../NetworkManager";
+import { NetworkError, NetworkManager } from "../network/NetworkManager";
 import { addBackgroundImage } from "../helpers/addBackgroundImage";
 import SpinnerPlugin from "phaser3-rex-plugins/templates/spinner/spinner-plugin.js";
 import { container } from "tsyringe";
