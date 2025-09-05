@@ -12,6 +12,7 @@ import SpinnerPlugin from "phaser3-rex-plugins/templates/spinner/spinner-plugin.
 import $ from "jquery";
 import { CaptureFlag } from "../gameObjects/CaptureFlag";
 import { PlayerCastle } from "../gameObjects/PlayerCastle";
+import { container } from "tsyringe";
 
 var selectorColor = 0xffff00;
 var selectorThickness = 2;
@@ -19,10 +20,10 @@ var selectorDraw = false;
 
 var pointerDownWorldSpace: { x: any; y: any } | null = null;
 
-var networkManager: NetworkManager;
 const SendChatMessage = () => {
   try {
     var messageText = $("#chat-message").val();
+    const networkManager = container.resolve(NetworkManager)
     networkManager.sendEventToServer(PacketType.ByClient.CLIENT_SENT_CHAT, {
       message: messageText,
     });
@@ -109,6 +110,7 @@ const PointerModeAction: IPointerModeAction = {
       }
       //mmb
       else if (pointer.button === 1) {
+        const networkManager = container.resolve(NetworkManager);
         networkManager.sendEventToServer(
           PacketType.ByClient.SOLDIER_CREATE_REQUESTED,
           {
@@ -119,6 +121,7 @@ const PointerModeAction: IPointerModeAction = {
       else if (pointer.button === 2) {
         /* RMB Pressed => Player either attempting to move selected soldiers or commanding them to attack enemy unit */
         if (selectedObjectsMap.size < 1) return;
+        const networkManager = container.resolve(NetworkManager);
 
         const circle = new Phaser.Geom.Circle(
           pointer.worldX,
@@ -200,6 +203,7 @@ const PointerModeAction: IPointerModeAction = {
           rect.height = Math.abs(rect.height);
         }
         selectorGraphics.strokeRectShape(rect);
+        const networkManager = container.resolve(NetworkManager);
 
         const playerId = networkManager.getClientId();
         if (!playerId) {
@@ -246,6 +250,8 @@ const PointerModeAction: IPointerModeAction = {
   [PointerMode.FLAG_PLACEMENT]: {
     pointerdown: function (scene: GameScene, pointer: Phaser.Input.Pointer) {
       const buttonPressed = pointer.button; // (0,1,2) => (lmb, mmb, rmb)
+      const networkManager = container.resolve(NetworkManager);
+
       if (buttonPressed !== 0) {
         scene.data.set(DataKey.SHOW_CAPTURE_FLAG_PLACEHOLDER, {
           visibility: false,
@@ -341,6 +347,8 @@ export class GameScene extends BaseScene {
   }
 
   onSoldierSelected(soldierId: string) {
+    const networkManager = container.resolve(NetworkManager);
+
     const playerId = networkManager.getClientId();
     if (!playerId) {
       return;
@@ -365,6 +373,8 @@ export class GameScene extends BaseScene {
   }
 
   onCaptureFlagSelected(flagId: string) {
+    const networkManager = container.resolve(NetworkManager);
+
     const playerId = networkManager.getClientId();
     if (!playerId) {
       return;
@@ -388,6 +398,8 @@ export class GameScene extends BaseScene {
     const phaserSceneObject = this.GetObject<Spearman>(
       `obj_spearman_${playerId}_${soldierId}`
     );
+    const networkManager = container.resolve(NetworkManager);
+
     const state = networkManager.getState();
     if (!state) return;
     const playerState = SessionStateClientHelpers.getPlayer(state, playerId);
@@ -425,7 +437,7 @@ export class GameScene extends BaseScene {
   }
 
   create() {
-    networkManager = this.registry.get("networkManager") as NetworkManager;
+    const networkManager = container.resolve(NetworkManager);
     const GameSessionState = networkManager.getState();
 
     if (!GameSessionState) {

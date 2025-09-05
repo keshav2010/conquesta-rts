@@ -3,6 +3,7 @@ import { BaseScene } from "./BaseScene";
 import { NetworkError, NetworkManager } from "../NetworkManager";
 import { addBackgroundImage } from "../helpers/addBackgroundImage";
 import SpinnerPlugin from "phaser3-rex-plugins/templates/spinner/spinner-plugin.js";
+import { container } from "tsyringe";
 
 const URL = `${window.location.host}`;
 
@@ -37,7 +38,7 @@ export class MenuScene extends BaseScene {
     spinner.setVisible(false);
     this.AddObject(spinner, "obj_spinner");
 
-    let networkManager = this.registry.get("networkManager") as NetworkManager;
+    let networkManager = container.resolve(NetworkManager)
     addBackgroundImage(this, "background");
     this.AddObject(this.add.text(100, 20, `Conquesta V1.0.1`), "obj_introText");
 

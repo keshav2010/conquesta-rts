@@ -8,8 +8,8 @@ import SessionStateClientHelpers from "../helpers/SessionStateClientHelpers";
 import SAT from "sat";
 import { PlayerCastle } from "../gameObjects/PlayerCastle";
 import SpawnTimerBar from "../ui/SpawnTimerBar";
+import { container } from "tsyringe";
 
-var networkManager: NetworkManager;
 var selectorGraphics: Phaser.GameObjects.Graphics;
 var selectorColor = 0xffff00;
 var selectorThickness = 2;
@@ -36,7 +36,7 @@ export class SpawnSelectionScene extends BaseScene {
     this.load.html("spawn-timer-bar", "../html/spawn-timer-bar.html");
   }
   create() {
-    networkManager = this.registry.get("networkManager") as NetworkManager;
+    const networkManager = container.resolve(NetworkManager);
     const GameSessionState = networkManager.getState();
 
     if (!GameSessionState) {
@@ -247,6 +247,8 @@ export class SpawnSelectionScene extends BaseScene {
   }
 
   update(delta: number) {
+    const networkManager = container.resolve(NetworkManager);
+
     const GameSessionState = networkManager.getState();
     if (!GameSessionState) {
       networkManager.disconnectGameServer();

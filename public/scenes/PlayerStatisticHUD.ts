@@ -10,6 +10,7 @@ import { PlayerState } from "../../gameserver/schema/PlayerState";
 import { Spearman } from "../soldiers/Spearman";
 import CONSTANTS from "../constant";
 import { CaptureFlag } from "../gameObjects/CaptureFlag";
+import { container } from "tsyringe";
 
 const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
   color: "#fff",
@@ -56,7 +57,7 @@ export class PlayerStatisticHUD extends BaseScene {
   }
   create() {
     var gameScene = this.scene.get<GameScene>(CONSTANT.SCENES.GAME);
-    var networkManager = this.registry.get("networkManager") as NetworkManager;
+    var networkManager = container.resolve(NetworkManager)
     networkManager.startPing()
     $("#soldierSelectionDiv #option_villager").on("click", () => {
       console.log("trying to create villager");

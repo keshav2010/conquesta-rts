@@ -5,8 +5,8 @@ import { NetworkManager } from "../NetworkManager";
 import SpinnerPlugin from "phaser3-rex-plugins/templates/spinner/spinner-plugin.js";
 import Spinner from "phaser3-rex-plugins/templates/spinner/spinner/Spinner";
 import { PlayerState } from "../../gameserver/schema/PlayerState";
+import { container } from "tsyringe";
 
-var networkManager: NetworkManager;
 var buttonState = false;
 
 
@@ -87,7 +87,7 @@ export class SessionLobbyScene extends BaseScene {
     this.load.html("sessionLobbyDOM", "../html/session-lobby.html");
   }
   create() {
-    networkManager = this.registry.get("networkManager") as NetworkManager;
+    const networkManager = container.resolve(NetworkManager);
 
     const sessionId = networkManager.getClientId();
 
@@ -193,6 +193,8 @@ export class SessionLobbyScene extends BaseScene {
     });
   }
   update(delta: number) {
+    const networkManager = container.resolve(NetworkManager);
+
     const timeLeft = Number((networkManager.room?.state.countdown || 0) / 1000);
     const sessionIdText = this.lobbyDOM?.getChildByID('p_sessionId');
     if (sessionIdText)

@@ -1,4 +1,6 @@
 //Establish Websocket to game server.
+import "reflect-metadata";
+
 import { GameScene } from "./scenes/GameScene";
 import { MenuScene } from "./scenes/MenuScene";
 import { ResultScene } from "./scenes/ResultScene";
@@ -11,6 +13,7 @@ import SpinnerPlugin from "phaser3-rex-plugins/templates/spinner/spinner-plugin.
 import Phaser from "phaser";
 import { TutorialScene } from "./scenes/TutorialScene";
 import { SessionCreateSettingsScene } from "./scenes/SessionCreateSettingsScene";
+import { container } from "tsyringe";
 const config = {
   type: Phaser.AUTO,
   width: 1200,
@@ -46,3 +49,6 @@ const config = {
   },
 };
 var game = new Phaser.Game(config);
+
+container.register<Phaser.Game>("PhaserGame", { useValue: game });
+container.register<Phaser.Data.DataManager>("PhaserRegistry", { useValue: game.registry });

@@ -1,3 +1,5 @@
+import { container, inject, injectable, singleton } from "tsyringe";
+
 import * as Colyseus from "colyseus.js";
 import Phaser from "phaser";
 import { SessionState } from "../gameserver/schema/SessionState";
@@ -23,6 +25,9 @@ export class NetworkError extends Error {
     this.errorCode = errorCode;
   }
 }
+
+@singleton()
+@injectable()
 export class NetworkManager {
   client: Colyseus.Client;
   room: Colyseus.Room<SessionState> | null;
@@ -39,8 +44,8 @@ export class NetworkManager {
   latency: number = 999;
 
   constructor(
-    phaserGame: Phaser.Game,
-    phaserRegistry: Phaser.Data.DataManager
+    @inject("PhaserGame") private phaserGame: Phaser.Game,
+    @inject("PhaserRegistry") private phaserRegistry: Phaser.Data.DataManager
   ) {
     const endpoint = `${location.protocol.replace("http", "ws")}//${URL}${location.port ? ':' + location.port : ''}`
     this.client = new Colyseus.Client(endpoint);
