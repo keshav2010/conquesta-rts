@@ -8,6 +8,8 @@ import { ITiled2DMap } from '../../common/ITiled2DMap';
 const URL = `${window.document.location.host.replace(/:.*/, '')}`;
 import axios from 'axios';
 import { LatencyService } from "./LatencyService";
+import { MapService } from "./MapService";
+import { EventRelayService } from "./EventRelayService";
 export type RoomEventHandlerCallbackType = (
   type: "onStateChange" | "onMessage" | "onLeave" | "onError",
   data: any
@@ -45,7 +47,10 @@ export class NetworkManager {
   constructor(
     @inject("PhaserGame") private phaserGame: Phaser.Game,
     @inject("PhaserRegistry") private phaserRegistry: Phaser.Data.DataManager,
-    @inject(LatencyService) public latencyService : LatencyService
+    @inject(MapService) private mapService: MapService,
+    @inject(LatencyService) public latencyService : LatencyService,
+    @inject(EventRelayService) private eventRelay: EventRelayService
+
   ) {
     const endpoint = `${location.protocol.replace("http", "ws")}//${URL}${location.port ? ':' + location.port : ''}`
     this.client = new Colyseus.Client(endpoint);
@@ -71,13 +76,7 @@ export class NetworkManager {
     }
 
     this.latencyService.start(this.room);
-    this.room.onMessage("*", (type, message) => {
-      if (typeof type === "string") {
-        this.game.scene.getScenes(true).forEach((scene) => {
-          scene.events.emit(type, message);
-        });
-      }
-    });
+    this.eventRelay.start(this.room, this.game);
 
     this.room.onLeave((code) => {
       console.log(`Leaving Room ${this.room?.name}, code: ${code}`);
@@ -86,58 +85,9 @@ export class NetworkManager {
 
     this.room.onError((code, message) => {
       console.log("[room / onError] :", { code, message });
-      // this.game.events.emit();
     });
   }
 
-  convertTo2DArray(
-    data: number[],
-    width: number,
-    height: number
-  ): number[][] | null {
-    if (width * height !== data.length) {
-      return null;
-    }
-    const result: number[][] = [];
-    let index = 0;
-    for (let i = 0; i < height; i++) {
-      const row = data.slice(index, index + width);
-      result.push(row);
-      index += width;
-    }
-    return result;
-  }
-
-  async fetchRoomMap() {
-    try {
-      const res = await axios({
-        method: "GET",
-        url: "/maps",
-        params: {
-          id: this.room!.state.mapId || "",
-        },
-      });
-      if (res.status === 200 || res.status === 304) {
-        this.mapData = res.data.data;
-        return;
-      }
-      throw new NetworkError(NetworkErrorCode.MAP_NOT_FOUND, "Failed to find map.");
-    } catch (error) {
-      this.mapData = null;
-      throw error;
-    }
-  }
-
-  getMapData() {
-    if (this.room) {
-      return this.convertTo2DArray(
-        this.room.state.tilemap.tilemap1D.toArray(),
-        this.room.state.tilemap.tilemapWidth,
-        this.room.state.tilemap.tilemapHeight
-      );
-    }
-    return null;
-  }
 
   async connectGameServer(roomId: string) {
     const room = await this.client.joinById<SessionState>(roomId, {
@@ -163,7 +113,12 @@ export class NetworkManager {
     }
   }
 
-
+  getMapData() {
+    if(!this.room)
+      return null;
+    return this.mapService.getMapData(this.room);
+  }
+  
   sendEventToServer<T = any>(eventType: string, data: T) {
     this.room?.send(eventType, data);
   }
@@ -214,7 +169,7 @@ export class NetworkManager {
 
   private teardownRoom() {
     this.latencyService.stop();
-
+    this.eventRelay.stop();
     if (this.room) {
       // Safely remove all listeners to avoid leaks
       this.room.removeAllListeners();
@@ -226,9 +181,8 @@ export class NetworkManager {
       }
     }
 
+    this.mapService.clearCache();
     this.room = null;
-    this.mapData = null;
     this.eventHandlersBinded = false;
   }
-
 }
