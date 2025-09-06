@@ -57,8 +57,8 @@ export class PlayerStatisticHUD extends BaseScene {
   }
   create() {
     var gameScene = this.scene.get<GameScene>(CONSTANT.SCENES.GAME);
-    var networkManager = container.resolve(NetworkManager)
-    networkManager.startPing()
+    const networkManager = container.resolve(NetworkManager)
+    
     $("#soldierSelectionDiv #option_villager").on("click", () => {
       console.log("trying to create villager");
     });
@@ -197,7 +197,7 @@ export class PlayerStatisticHUD extends BaseScene {
     gameScene.AddSceneEvent(
       PacketType.ByServer.PONG_RESPONSE,
       (data : any) => {
-        this.GetObject<Phaser.GameObjects.Text>('obj_text_ping')?.setText(`PING:${Date.now() - (networkManager?.lastPingTimestamp || Date.now()-999)!}`);
+        this.GetObject<Phaser.GameObjects.Text>('obj_text_ping')?.setText(`PING:${networkManager.latencyService.latency}!}`);
       }
     )
 

@@ -7,6 +7,7 @@ import { ITiled2DMap } from '../../common/ITiled2DMap';
 
 const URL = `${window.document.location.host.replace(/:.*/, '')}`;
 import axios from 'axios';
+import { LatencyService } from "./LatencyService";
 export type RoomEventHandlerCallbackType = (
   type: "onStateChange" | "onMessage" | "onLeave" | "onError",
   data: any
@@ -39,13 +40,12 @@ export class NetworkManager {
 
   // the JSON stringified data for scene map (tiled2D json format)
   private mapData: ITiled2DMap | null = null;
-  private pingIntervalId: NodeJS.Timeout | undefined;
   lastPingTimestamp: number = 0;
-  latency: number = 999;
 
   constructor(
     @inject("PhaserGame") private phaserGame: Phaser.Game,
-    @inject("PhaserRegistry") private phaserRegistry: Phaser.Data.DataManager
+    @inject("PhaserRegistry") private phaserRegistry: Phaser.Data.DataManager,
+    @inject(LatencyService) public latencyService : LatencyService
   ) {
     const endpoint = `${location.protocol.replace("http", "ws")}//${URL}${location.port ? ':' + location.port : ''}`
     this.client = new Colyseus.Client(endpoint);
@@ -55,19 +55,8 @@ export class NetworkManager {
     this.scene = phaserGame.scene;
 
     this.registry = phaserRegistry;
-
     this.playerName = null;
     this.eventHandlersBinded = false;
-  }
-
-  // In your setupRoomListener() or after joining a room:
-  startPing() {
-    this.pingIntervalId = setInterval(() => {
-      if (this.room) {
-        this.lastPingTimestamp = Date.now();
-        this.room.send("ping", { timestamp: this.lastPingTimestamp });
-      }
-    }, 500);
   }
 
   getState() {
@@ -81,6 +70,7 @@ export class NetworkManager {
       return;
     }
 
+    this.latencyService.start(this.room);
     this.room.onMessage("*", (type, message) => {
       if (typeof type === "string") {
         this.game.scene.getScenes(true).forEach((scene) => {
@@ -223,10 +213,7 @@ export class NetworkManager {
   }
 
   private teardownRoom() {
-    if (this.pingIntervalId) {
-      clearInterval(this.pingIntervalId);
-      this.pingIntervalId = undefined;
-    }
+    this.latencyService.stop();
 
     if (this.room) {
       // Safely remove all listeners to avoid leaks
