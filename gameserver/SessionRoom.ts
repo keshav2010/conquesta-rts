@@ -8,7 +8,6 @@ import { GameStateManager } from "./core/GameStateManager";
 import SessionStateMachineAction from "./stateMachines/server-state-machine/SessionStateBehaviour";
 import SessionStateMachineJSON from "./stateMachines/server-state-machine/SessionStateMachine.json";
 import { PlayerState } from "./schema/PlayerState";
-import { SERVER_CONFIG } from "./config";
 
 export class SessionRoom extends Room<SessionState> {
   maxClients = 10;
