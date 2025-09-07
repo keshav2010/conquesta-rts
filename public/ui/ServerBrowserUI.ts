@@ -121,7 +121,7 @@ export class ServerBrowserUI {
 
   private async onJoinClicked(roomId: string) {
     try {
-      const connectedRoom = await this.networkManager.connectGameServer(roomId);
+      const connectedRoom = await this.networkManager.joinRoomById(roomId);
       console.log("Connected to room:", connectedRoom);
       this.scene.scene.start("SESSIONLOBBY");
     } catch (error) {

@@ -60,6 +60,7 @@
     "@types/express": "^4.17.23",
     "@types/jest": "^29.5.8",
     "@types/sat": "^0.0.35",
+    "@types/uuid": "^10.0.0",
     "jest": "^29.3.1"
   }
 }

@@ -58,8 +58,8 @@ export class MenuScene extends BaseScene {
     const tutorialBtn = playerForm.getChildByName("btnTutorial");
 
     let playerNameInput = playerForm.getChildByName("player-name-input");
-    if (networkManager.getPlayerName().length > 0)
-      (playerForm.getChildByName("player-name-input") as any).value = networkManager.getPlayerName();
+    if (networkManager.identityService.getPlayerName().length > 0)
+      (playerForm.getChildByName("player-name-input") as any).value = networkManager.identityService.getPlayerName();
 
     playerNameInput?.addEventListener("input", (event) => {
       var inputName = <Element & { value: string }>(
@@ -68,7 +68,7 @@ export class MenuScene extends BaseScene {
       if (!inputName) return;
       if (inputName.value !== "") {
         let name = inputName.value.trim().replace(" ", "-");
-        networkManager.setPlayerName(name);
+        networkManager.identityService.setPlayerName(name);
         this.GetObject<Phaser.GameObjects.Text>("obj_introText")?.setText(
           `Welcome: ${name}`
         );

@@ -80,7 +80,7 @@ export class SessionCreateSettingsScene extends BaseScene {
         throw new Error("NetworkManager is not defined");
       }
 
-      const playerName = networkManager.getPlayerName();
+      const playerName = networkManager.identityService.getPlayerName();
       const domRoot = this.settingsDOM!.node as HTMLElement;
 
       const minSlider = domRoot.querySelector("#minPlayers") as HTMLInputElement;

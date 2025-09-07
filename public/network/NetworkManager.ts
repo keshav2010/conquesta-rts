@@ -10,6 +10,7 @@ import axios from 'axios';
 import { LatencyService } from "./LatencyService";
 import { MapService } from "./MapService";
 import { EventRelayService } from "./EventRelayService";
+import { PlayerIdentityService } from "./PlayerIdentity";
 export type RoomEventHandlerCallbackType = (
   type: "onStateChange" | "onMessage" | "onLeave" | "onError",
   data: any
@@ -49,8 +50,8 @@ export class NetworkManager {
     @inject("PhaserRegistry") private phaserRegistry: Phaser.Data.DataManager,
     @inject(MapService) private mapService: MapService,
     @inject(LatencyService) public latencyService : LatencyService,
-    @inject(EventRelayService) private eventRelay: EventRelayService
-
+    @inject(EventRelayService) private eventRelay: EventRelayService,
+    @inject(PlayerIdentityService) public identityService: PlayerIdentityService,
   ) {
     const endpoint = `${location.protocol.replace("http", "ws")}//${URL}${location.port ? ':' + location.port : ''}`
     this.client = new Colyseus.Client(endpoint);
@@ -89,11 +90,12 @@ export class NetworkManager {
   }
 
 
-  async connectGameServer(roomId: string) {
+  async joinRoomById(roomId: string) {
     const room = await this.client.joinById<SessionState>(roomId, {
-      playerName: this.getPlayerName(),
+      playerName: this.identityService.getPlayerName(),
     });
     this.room = room;
+    localStorage.setItem("colyseus:reconnectionToken", this.room.reconnectionToken);
     this.setupRoomListener();
     return room;
   }
@@ -122,16 +124,6 @@ export class NetworkManager {
   sendEventToServer<T = any>(eventType: string, data: T) {
     this.room?.send(eventType, data);
   }
-
-  setPlayerName(name: string) {
-    this.playerName = name.trim().replace(" ", "-");
-  }
-  getPlayerName() {
-    this.playerName =
-      this.playerName ||
-      `RandomPlayer${Math.abs(Math.random() * 1000).toFixed()}`;
-    return this.playerName;
-  }
   async getAvailableSession(roomName?: string) {
     let rooms = await this.client.getAvailableRooms(roomName);
     return rooms;
@@ -151,12 +143,12 @@ export class NetworkManager {
       // ref newly launched room
       this.room = await this.client.create("session_room", {
         name: sessionName,
-        playerName: this.getPlayerName(),
+        playerName: this.identityService.getPlayerName(),
         minPlayers: roomOptions.minPlayers,
         maxPlayers: roomOptions.maxPlayers,
         spawnSelectionTimer: roomOptions.spawnSelectionTimer
       });
-
+      localStorage.setItem("colyseus:reconnectionToken", this.room.reconnectionToken);
       this.setupRoomListener();
     } catch (err) {
       console.error(err);
@@ -170,6 +162,7 @@ export class NetworkManager {
   private teardownRoom() {
     this.latencyService.stop();
     this.eventRelay.stop();
+    localStorage.removeItem("colyseus:reconnectionToken");
     if (this.room) {
       // Safely remove all listeners to avoid leaks
       this.room.removeAllListeners();
