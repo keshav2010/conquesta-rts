@@ -23,6 +23,7 @@ export enum ServerToClientPacketType {
   GAME_STARTED = "gs",
   SOLDIER_CREATE_ACK = "sca",
   SOLDIER_SPAWN_SCHEDULED = "sspwnsch",
+  PLAYER_SCORE_UPDATED = "plyrscoreupdated",
   SPAWN_POINT_ACK = "spnpntack",
   SPAWN_POINT_RJCT = "spnpntreject",
   GAME_STATE_SYNC = "gss",

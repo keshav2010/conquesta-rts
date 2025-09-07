@@ -14,6 +14,9 @@ export class SessionRoom extends Room<SessionState> {
   patchRate = 60;
   dispatcher = new Dispatcher(this);
 
+  leaderboardTimer: number = 0; // in milliseconds
+  leaderboardInterval: number = 1000; // 5 seconds
+
   gameManager = new GameStateManager<PlayerState>(
     SessionStateMachineJSON,
     SessionStateMachineAction

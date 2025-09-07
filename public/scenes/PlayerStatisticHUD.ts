@@ -11,6 +11,7 @@ import { Spearman } from "../soldiers/Spearman";
 import CONSTANTS from "../constant";
 import { CaptureFlag } from "../gameObjects/CaptureFlag";
 import { container } from "tsyringe";
+import LeaderboardPanel from "../ui/LeaderboardPanel";
 
 const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
   color: "#fff",
@@ -31,6 +32,7 @@ const tooltipTextStyle : Phaser.Types.GameObjects.Text.TextStyle = {
 }
 
 export class PlayerStatisticHUD extends BaseScene {
+  leaderboardPanel: LeaderboardPanel | undefined;
   constructor() {
     super(CONSTANT.SCENES.HUD_SCORE);
   }
@@ -53,8 +55,41 @@ export class PlayerStatisticHUD extends BaseScene {
     this.load.html("soldierSelectionWidget", "../html/soldier-selection.html");
     this.load.html("phaserChatbox", "../html/phaser-chatbox.html");
     this.load.html("game-action-panel", "../html/game-action-panel.html");
+    this.load.html("leaderboard-panel", "../html/match-leaderboard-panel.html");
     this.scene.bringToTop();
   }
+
+  appendToLeaderboard(players : Array<PlayerState>) {
+    const listEl = document.getElementById("leaderboard-list");
+    if(!listEl)
+      return;
+    listEl.innerHTML = "";
+    // sort players by score (descending)
+    const sorted = [...players].sort((a, b) => b.score - a.score);
+
+    sorted.forEach((p, idx) => {
+      const item = document.createElement("div");
+      item.className = "leaderboard-item";
+
+      item.innerHTML = `
+        <div class="leaderboard-rank">#${idx + 1}</div>
+        <div class="leaderboard-name">${p.name}</div>
+        <div class="leaderboard-score">${p.score}</div>
+      `;
+
+      listEl.appendChild(item);
+    });
+  }
+
+  updateLeaderboardUI() {
+    const networkManager = container.resolve(NetworkManager);
+    const state = networkManager.getState()
+    if(!state) return;
+    const players = Array.from(state.players.values());
+    this.leaderboardPanel?.update(players.map(player => ({ name: player.name, score: player.score })));
+    // this.appendToLeaderboard(players);
+  }
+
   create() {
     var gameScene = this.scene.get<GameScene>(CONSTANT.SCENES.GAME);
     const networkManager = container.resolve(NetworkManager)
@@ -200,7 +235,23 @@ export class PlayerStatisticHUD extends BaseScene {
         this.GetObject<Phaser.GameObjects.Text>('obj_text_ping')?.setText(`PING:${networkManager.latencyService.latency}!}`);
       }
     )
-
+    gameScene.AddSceneEvent(
+      PacketType.ByServer.PLAYER_SCORE_UPDATED,
+      ({
+        playerId,
+        score
+      }: {
+        playerId: string;
+        score: number;
+      }) => {
+        try {
+          console.log('received event for player score update ', playerId, score);
+          this.updateLeaderboardUI();
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    );
     gameScene.AddSceneEvent(
       PacketType.ByServer.PLAYER_RESOURCE_UPDATED,
       ({
@@ -214,11 +265,7 @@ export class PlayerStatisticHUD extends BaseScene {
       }) => {
         try {
           if (playerId === playerId)
-            resourceText.setText(
-              `Economy: ${resources.toFixed(
-                2
-              )} ( change/sec: ${resourceGrowthRate.toFixed(2)})`
-            );
+            resourceText.setText(`Economy: ${resources.toFixed(2)} (change/sec: ${resourceGrowthRate.toFixed(2)})`);
         } catch (err) {
           console.log(err);
         }
@@ -382,11 +429,15 @@ export class PlayerStatisticHUD extends BaseScene {
     // --- Add Game Action Panel DOM (bottom right, draggable) ---
     const panelX = this.sys.canvas.width - 10;
     const panelY = this.sys.canvas.height - 260;
+    this.leaderboardPanel = new LeaderboardPanel(this);
+    this.AddObject(this.leaderboardPanel.getDom(), "obj_leaderboard");
+
     const gameActionPanel = this.add.dom(panelX, panelY).createFromCache("game-action-panel");
     gameActionPanel.setOrigin(1, 0);
     gameActionPanel.setDepth(10000);
     gameActionPanel.setScrollFactor(0);
     this.AddObject(gameActionPanel, "obj_gameActionPanel");
+
     // Drag logic
     const panelContainer = gameActionPanel.getChildByID("game-action-panel-container");
     const panelDrag = gameActionPanel.getChildByID("game-action-panel-drag");

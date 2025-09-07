@@ -671,6 +671,15 @@ export class GameScene extends BaseScene {
       );
 
       this.AddStateChangeListener(
+        player.listen("score", (value: number) => {
+          this.events.emit(PacketType.ByServer.PLAYER_SCORE_UPDATED, {
+            playerId: player.id,
+            score: value
+          })
+        })
+      );
+  
+      this.AddStateChangeListener(
         player.soldiers.onAdd((soldier, key) => {
           this.onSoldierAdded(soldier, player);
 

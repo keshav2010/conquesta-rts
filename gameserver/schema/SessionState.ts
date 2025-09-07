@@ -14,6 +14,7 @@ export interface SessionOptions {
 export class SessionState extends Schema {
   // Key : sessionId
   @type({ map: PlayerState }) players = new MapSchema<PlayerState>();
+  
   @type("string") sessionState:
     | "SESSION_LOBBY_STATE"
     | "SPAWN_SELECTION_STATE"
