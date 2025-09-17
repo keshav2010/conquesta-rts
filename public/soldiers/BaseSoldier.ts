@@ -15,8 +15,6 @@ export abstract class BaseSoldier
   readonly id: string;
   initialParam: any;
   color: Phaser.Math.Vector3;
-  expectedPositionX: number;
-  expectedPositionY: number;
   hp: LoadingBar;
   highlightBackground: BackgroundHighlight;
   DEBUGTEXT: Phaser.GameObjects.Text;
@@ -53,8 +51,6 @@ export abstract class BaseSoldier
 
     scene.events.on("update", this.update, this);
     this.color = new Phaser.Math.Vector3().copy(color);
-    this.expectedPositionX = x;
-    this.expectedPositionY = y;
     this.setPosition(x, y);
 
     this.scale = 1;
