@@ -4,7 +4,7 @@ import { PacketType } from "../../common/PacketType";
 
 const { SoldierType } = require("../../common/SoldierType");
 import $ from "jquery";
-import { DataKey as GameSceneDataKey, GameScene, Textures } from "./GameScene";
+import { GameScene, Textures } from "./GameScene";
 import { NetworkManager } from "../network/NetworkManager";
 import { PlayerState } from "../../gameserver/schema/PlayerState";
 import { Spearman } from "../soldiers/Spearman";

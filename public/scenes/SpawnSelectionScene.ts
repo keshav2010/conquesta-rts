@@ -1,6 +1,4 @@
 import CONSTANT from "../constant";
-import $ from "jquery";
-import LoadingBar from "../gameObjects/LoadingBar";
 import { NetworkManager } from "../network/NetworkManager";
 import { BaseScene } from "./BaseScene";
 import { PacketType } from "../../common/PacketType";
