@@ -230,12 +230,10 @@ export class PlayerStatisticHUD extends BaseScene {
       }
     );
 
-    gameScene.AddSceneEvent(
-      PacketType.ByServer.PONG_RESPONSE,
-      (data : any) => {
-        this.GetObject<Phaser.GameObjects.Text>('obj_text_ping')?.setText(`PING:${networkManager.latencyService.latency}!}`);
-      }
-    )
+    networkManager.latencyService.onLatencyChange((data: number) => {
+      this.GetObject<Phaser.GameObjects.Text>('obj_text_ping')?.setText(`PING:${data}!}`);
+    });
+
     gameScene.AddSceneEvent(
       PacketType.ByServer.PLAYER_SCORE_UPDATED,
       ({

@@ -9,6 +9,11 @@ export class LatencyService {
   private room?: Colyseus.Room;
   latency = 999;
 
+  cb: Function | null = null;
+  
+  onLatencyChange(cb : Function) {
+    this.cb = cb;
+  }
   start(room: Colyseus.Room) {
     this.stop(); // cleanup any old state
 
@@ -25,7 +30,8 @@ export class LatencyService {
   private onPong = (data: { timestamp: number }) => {
     const rtt = Date.now() - data.timestamp;
     // Optionally smooth (moving average over last 5 samples)
-    this.latency = this.latency === 999 ? rtt : (this.latency * 4 + rtt) / 5;
+    this.latency = Math.floor(this.latency === 999 ? rtt : (this.latency + rtt) / 2);
+    this.cb && this.cb(this.latency);
   };
 
   stop() {
@@ -33,6 +39,9 @@ export class LatencyService {
       clearInterval(this.pingInterval);
       this.pingInterval = undefined;
     }
+
+    if(this.cb)
+      this.cb = null;
 
     if (this.room) {
       this.room.removeAllListeners();
