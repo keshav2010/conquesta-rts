@@ -8,7 +8,7 @@ import { SelectableSceneEntity } from "../scenes/BaseScene";
 import { container } from "tsyringe";
 const GAMEEVENTS = CONSTANTS.GAMEEVENTS;
 
-export class BaseSoldier
+export abstract class BaseSoldier
   extends Phaser.GameObjects.Sprite
   implements SelectableSceneEntity
 {
