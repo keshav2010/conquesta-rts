@@ -4,18 +4,17 @@ import { CaptureFlag } from "../../gameObjects/CaptureFlag";
 import { NetworkManager } from "../../network/NetworkManager";
 import { GameScene } from "../../scenes/GameScene";
 import { Spearman } from "../../soldiers/Spearman";
-import { IPointerStrategy } from "../pointerStrategy";
+import { IPointerStrategy } from "./pointerStrategy";
 import { DataKey } from "../../config/DataKey";
 import { PointerModeContext } from "./PointerModeContext";
-
-let selectorDraw = false;
-let pointerDownWorldSpace: { x: number; y: number } | null = null;
-const selectorColor = 0xffffff;
-const selectorThickness = 1;
 
 @injectable()
 export class DefaultPointerModeStrategy implements IPointerStrategy {
   readonly name: string = "default-strategy"
+  private selectorDraw: boolean = false;
+  private selectorColor: number = 0xffffff;
+  private readonly selectorThickness: number = 1;
+  private pointerDownWorldSpace: {x:number, y:number } | null = null;
   constructor(
     @inject(PointerModeContext) private context: PointerModeContext
   ){
@@ -38,8 +37,8 @@ export class DefaultPointerModeStrategy implements IPointerStrategy {
       selectorGraphics.clear();
       selectedObjectsMap.clear();
 
-      selectorDraw = true;
-      pointerDownWorldSpace = { x: pointer.worldX, y: pointer.worldY };
+      this.selectorDraw = true;
+      this.pointerDownWorldSpace = { x: pointer.worldX, y: pointer.worldY };
     } else if (pointer.button === 1) {
       // Middle Mouse Button → Soldier spawn
       const networkManager = container.resolve(NetworkManager);
@@ -107,15 +106,15 @@ export class DefaultPointerModeStrategy implements IPointerStrategy {
       return;
     }
 
-    if (selectorDraw && pointer.button === 0) {
+    if (this.selectorDraw && pointer.button === 0) {
       selectorGraphics.clear();
-      selectorGraphics.lineStyle(selectorThickness, selectorColor, 1);
+      selectorGraphics.lineStyle(this.selectorThickness, this.selectorColor, 1);
 
-      let rect = new Phaser.Geom.Rectangle(
-        pointerDownWorldSpace?.x!,
-        pointerDownWorldSpace?.y!,
-        pointer.worldX - pointerDownWorldSpace!.x,
-        pointer.worldY - pointerDownWorldSpace!.y
+      const rect = new Phaser.Geom.Rectangle(
+        this.pointerDownWorldSpace?.x!,
+        this.pointerDownWorldSpace?.y!,
+        pointer.worldX - this.pointerDownWorldSpace!.x,
+        pointer.worldY - this.pointerDownWorldSpace!.y
       );
       if (rect.width < 0) {
         rect.x += rect.width;
@@ -161,9 +160,9 @@ export class DefaultPointerModeStrategy implements IPointerStrategy {
     const selectorGraphics = scene.GetObject<Phaser.GameObjects.Graphics>(
       "obj_selectorGraphics"
     )!;
-    selectorDraw = false;
+    this.selectorDraw = false;
+    this.pointerDownWorldSpace = null;
     selectorGraphics.clear();
-    pointerDownWorldSpace = null;
   }
 
   pointerout(): void {}

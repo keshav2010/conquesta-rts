@@ -1,5 +1,5 @@
 import { container, injectable } from "tsyringe";
-import { IPointerStrategy } from "../pointerStrategy";
+import { IPointerStrategy } from "./pointerStrategy";
 import { DefaultPointerModeStrategy } from "./DefaultPointerModeStrategy";
 
 @injectable()

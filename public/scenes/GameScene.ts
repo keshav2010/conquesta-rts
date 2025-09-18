@@ -404,23 +404,11 @@ export class GameScene extends BaseScene {
     );
 
     this.AddSceneEvent(CONSTANT.GAMEEVENTS.CREATE_CAPTURE_FLAG_BUTTON_CLICKED, () => {
-      this.pointerModeContext?.setStrategy(container.resolve(FlagPlacementPointerModeStrategy));
       this.GetObject<Phaser.GameObjects.Sprite>(
         "obj_captureFlagPlaceholder"
       )?.setVisible(true);
+      this.pointerModeContext?.setStrategy(container.resolve(FlagPlacementPointerModeStrategy));
     });
-
-    this.data.events.on(
-      `changedata-${DataKey.SHOW_CAPTURE_FLAG_PLACEHOLDER}`,
-      (_: any, value: any) => {
-        if (value.visibility === false)
-          this.pointerModeContext?.setStrategy(container.resolve(DefaultPointerModeStrategy));
-
-        this.GetObject<Phaser.GameObjects.Sprite>(
-          "obj_captureFlagPlaceholder"
-        )?.setVisible(false);
-      }
-    );
 
     const state = networkManager.getState();
     if (!state) return;
