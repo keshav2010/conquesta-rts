@@ -13,6 +13,7 @@ import { CaptureFlag } from "../gameObjects/CaptureFlag";
 import { container } from "tsyringe";
 import LeaderboardPanel from "../ui/LeaderboardPanel";
 import Chatbox from "../ui/Chatbox";
+import { CameraFocusManager } from "../gameObjects/CameraFocusManager";
 
 const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
   color: "#fff",
@@ -321,8 +322,8 @@ export class PlayerStatisticHUD extends BaseScene {
     this.input.on("pointerdown", blockIfChatFocused, this);
     // --- Chat send logic ---
     // Listen for new chat messages from the server (reuse GameScene event)
-    gameScene.AddSceneEvent(PacketType.ByServer.NEW_CHAT_MESSAGE, (data: { message: string, senderName: string }) => {
-      chatbox.appendChatMessage(data.message, data.senderName);
+    gameScene.AddSceneEvent(PacketType.ByServer.NEW_CHAT_MESSAGE, (data: { message: string, senderId: string }) => {
+      chatbox.appendChatMessage(gameScene, data.message, data.senderId);
     });
     // --- Resizable chatbox logic ---
 
@@ -334,7 +335,8 @@ export class PlayerStatisticHUD extends BaseScene {
     this.leaderboardPanel.onPlayerClick((playerId: string) => {
       const player = container.resolve(NetworkManager).getState()?.players.get(playerId);
       if(!player) return;
-      gameScene.getSceneCamera().pan(player?.pos.x, player?.pos.y, 800);
+      const focusManager = container.resolve(CameraFocusManager);
+      focusManager.focusOnEntity(gameScene, playerId);
     });
     this.AddObject(this.leaderboardPanel.getDom(), "obj_leaderboard");
 

@@ -4,6 +4,7 @@ import { PacketType } from "../../common/PacketType";
 import { container } from "tsyringe";
 import { NetworkManager } from "../network/NetworkManager";
 import { Resizable } from "./Resizable";
+import { CameraFocusManager } from "../gameObjects/CameraFocusManager";
 
 export default class Chatbox {
     private dom: Phaser.GameObjects.DOMElement;
@@ -83,9 +84,21 @@ export default class Chatbox {
         });
     }
 
+    appendSystemMessage(msg: string, type: "info" | "warning" | "error" = "info") {
+        const chatMessages = this.dom.getChildByID("phaser-chatbox-messages") as HTMLDivElement | null;
+        if (!chatMessages) return;
+
+        const div = document.createElement("div");
+        div.classList.add("system-message", type);
+        div.innerText = msg;
+
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+
     sendChat() {
         const chatInput = this.dom.getChildByID("phaser-chatbox-input") as HTMLInputElement | null;
-
         if (!chatInput) return;
         let value = chatInput.value.trim();
         if (!value) return;
@@ -94,11 +107,22 @@ export default class Chatbox {
         networkManager.sendEventToServer(PacketType.ByClient.CLIENT_SENT_CHAT, { message: value });
         chatInput.value = "";
     }
-    appendChatMessage(msg: string, sender: string) {
+    appendChatMessage(scene: Phaser.Scene, msg: string, senderId: string) {
         const chatMessages = this.dom.getChildByID("phaser-chatbox-messages") as HTMLDivElement | null;
         if (!chatMessages) return;
+
+        // if player not found, assume it to be sent by system
+        let senderPlayer = container.resolve(NetworkManager).getState()?.players.get(senderId);
+        const senderName = senderPlayer?.name || '[SYSTEM]';
+
         const div = document.createElement("div");
-        div.innerHTML = `<b>${sender}:</b> ${msg}`;
+        div.innerHTML = `<b>${senderName}:</b> ${msg}`;
+        
+        if(senderName !== '[SYSTEM]')
+            div.addEventListener('click', () => {
+                container.resolve(CameraFocusManager).focusOnEntity(scene, senderId, 100);
+            })
+
         chatMessages.appendChild(div);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }

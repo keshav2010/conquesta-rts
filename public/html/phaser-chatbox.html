@@ -1,4 +1,24 @@
 <style>
+  .system-message {
+        font-style: italic;
+        margin: 4px 0;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+
+    .system-message.info {
+        color: #4da6ff;
+    }
+
+    .system-message.warning {
+        color: #ffcc00;
+    }
+
+    .system-message.error {
+        color: #ff4444;
+        font-weight: bold;
+    }
+
   .phaser-chatbox-container {
     width: 320px;
     min-width: 220px;
@@ -120,7 +140,7 @@
 </style>
 <div class="phaser-chatbox-container" id="phaser-chatbox-container">
   <div class="phaser-chatbox-header" id="phaser-chatbox-header">
-    Chat
+    Messages & Notifications
     <button class="phaser-chatbox-min-btn" id="phaser-chatbox-min-btn" title="Minimize">–</button>
   </div>
   <div class="phaser-chatbox-body" id="phaser-chatbox-body">

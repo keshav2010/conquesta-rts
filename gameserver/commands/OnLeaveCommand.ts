@@ -16,14 +16,14 @@ export class OnLeaveCommand extends Command<SessionRoom, CommandPayload> {
       
       this.room.broadcast(PacketType.ByServer.NEW_CHAT_MESSAGE, {
         message: `Opponents left the game! You've won!`,
-        senderName: '[SERVER]',
+        senderId: '[SERVER]',
       });
       return;
     }
 
     this.room.broadcast(PacketType.ByServer.NEW_CHAT_MESSAGE, {
       message: `${winner?.name} left the game.`,
-      senderName: '[SERVER]',
+      senderId: '[SERVER]',
     });
   }
 }
