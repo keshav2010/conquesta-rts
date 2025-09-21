@@ -87,8 +87,14 @@ export class PlayerStatisticHUD extends BaseScene {
     const state = networkManager.getState()
     if(!state) return;
     const players = Array.from(state.players.values());
-    this.leaderboardPanel?.update(players.map(player => ({ name: player.name, score: player.score })));
-    // this.appendToLeaderboard(players);
+    this.leaderboardPanel?.update(players.map(player => (
+        {
+          name: player.name,
+          score: player.score,
+          playerId: player.id
+        }
+      )
+    ));
   }
 
   create() {
@@ -325,6 +331,11 @@ export class PlayerStatisticHUD extends BaseScene {
     const panelX = this.sys.canvas.width - 10;
     const panelY = this.sys.canvas.height - 260;
     this.leaderboardPanel = new LeaderboardPanel(this);
+    this.leaderboardPanel.onPlayerClick((playerId: string) => {
+      const player = container.resolve(NetworkManager).getState()?.players.get(playerId);
+      if(!player) return;
+      gameScene.getSceneCamera().pan(player?.pos.x, player?.pos.y, 800);
+    });
     this.AddObject(this.leaderboardPanel.getDom(), "obj_leaderboard");
 
     const gameActionPanel = this.add.dom(panelX, panelY).createFromCache("game-action-panel");

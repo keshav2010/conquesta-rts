@@ -1,15 +1,18 @@
 import Phaser from "phaser";
 import { Draggable } from "./Draggable";
-
+import { container } from "tsyringe";
+import { NetworkManager } from "../network/NetworkManager";
 interface PlayerScore {
   name: string;
+  playerId: string;
   score: number;
-}
+} 
 
 export default class LeaderboardPanel {
   private dom: Phaser.GameObjects.DOMElement;
   private listContainer: HTMLElement;
 
+  private onPlayerClickHandler: Function | null = null;
   constructor(scene: Phaser.Scene) {
     // Create DOM panel
     this.dom = scene.add
@@ -22,14 +25,26 @@ export default class LeaderboardPanel {
 
     const node = this.dom.node as HTMLElement;
 
-    const container = node.querySelector("#leaderboard-list");
-    if (!container) {
+    const leaderboardList = node.querySelector("#leaderboard-list");
+    if (!leaderboardList) {
       throw new Error("Leaderboard panel template missing #leaderboard-list");
     }
-    this.listContainer = container as HTMLElement;
+    this.listContainer = leaderboardList as HTMLElement;
 
     // Attach draggable
     new Draggable(scene, this.dom, "#leaderboard-drag-handle");
+    const initialScore: PlayerScore[] = [];
+    for(const entry of container.resolve(NetworkManager).getState()?.players.values()!) {
+      initialScore.push({
+        score: entry.score,
+        name: entry.name,
+        playerId: entry.id
+      })
+    }
+  }
+
+  onPlayerClick(cb: (playerId: string) => void) {
+    this.onPlayerClickHandler = cb;
   }
 
   /**
@@ -50,7 +65,7 @@ export default class LeaderboardPanel {
 
       const name = document.createElement("span");
       name.className = "leaderboard-name";
-      name.textContent = this.escapeHtml(p.name);
+      name.textContent = this.escapeHtml(p.name); 
 
       const score = document.createElement("span");
       score.className = "leaderboard-score";
@@ -60,6 +75,11 @@ export default class LeaderboardPanel {
       row.appendChild(name);
       row.appendChild(score);
 
+      row.setAttribute('data-player-id', `${p.playerId}`);
+      if(this.onPlayerClickHandler)
+        row.addEventListener('click', () => {
+          this.onPlayerClickHandler!(p.playerId);
+        })
       this.listContainer.appendChild(row);
     }
   }

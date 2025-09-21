@@ -728,6 +728,10 @@ export class GameScene extends BaseScene {
     });
   }
 
+  getSceneCamera() {
+    return this.cameras.main;
+  }
+
   update(delta: number) {
     this.controls?.update(delta);
 

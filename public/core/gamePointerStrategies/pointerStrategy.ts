@@ -1,5 +1,5 @@
+import { GameScene } from "../../scenes/GameScene";
 
-import { GameScene } from "../scenes/GameScene";
 export interface IPointerStrategy {
   name : string;
   pointerdown(scene: GameScene, pointer: Phaser.Input.Pointer): void;
