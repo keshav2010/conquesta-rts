@@ -8,12 +8,14 @@ import { GameStateManager } from "./core/GameStateManager";
 import SessionStateMachineAction from "./stateMachines/server-state-machine/SessionStateBehaviour";
 import SessionStateMachineJSON from "./stateMachines/server-state-machine/SessionStateMachine.json";
 import { PlayerState } from "./schema/PlayerState";
-import { SERVER_CONFIG } from "./config";
 
 export class SessionRoom extends Room<SessionState> {
   maxClients = 10;
   patchRate = 60;
   dispatcher = new Dispatcher(this);
+
+  leaderboardTimer: number = 0; // in milliseconds
+  leaderboardInterval: number = 1000; // 5 seconds
 
   gameManager = new GameStateManager<PlayerState>(
     SessionStateMachineJSON,

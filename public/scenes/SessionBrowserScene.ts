@@ -2,7 +2,8 @@ import { ServerBrowserUI } from "../ui/ServerBrowserUI";
 import { BaseScene } from "./BaseScene";
 import CONSTANT from "../constant";
 import { addBackgroundImage } from "../helpers/addBackgroundImage";
-import { NetworkManager } from "../NetworkManager";
+import { NetworkManager } from "../network/NetworkManager";
+import { container } from "tsyringe";
 
 export class SessionBrowserScene extends BaseScene {
   serverBrowserUI: ServerBrowserUI | undefined;
@@ -22,7 +23,7 @@ export class SessionBrowserScene extends BaseScene {
   }
 
   create() {
-    const networkManager = this.registry.get("networkManager") as NetworkManager;
+    const networkManager = container.resolve(NetworkManager);
 
     this.AddObject(
       this.add.text(100, 20, "Conquesta").setName("obj_introText"),

@@ -4,12 +4,16 @@ import { PacketType } from "../../common/PacketType";
 
 const { SoldierType } = require("../../common/SoldierType");
 import $ from "jquery";
-import { DataKey as GameSceneDataKey, GameScene, Textures } from "./GameScene";
-import { NetworkManager } from "../NetworkManager";
+import { GameScene, Textures } from "./GameScene";
+import { NetworkManager } from "../network/NetworkManager";
 import { PlayerState } from "../../gameserver/schema/PlayerState";
 import { Spearman } from "../soldiers/Spearman";
 import CONSTANTS from "../constant";
 import { CaptureFlag } from "../gameObjects/CaptureFlag";
+import { container } from "tsyringe";
+import LeaderboardPanel from "../ui/LeaderboardPanel";
+import Chatbox from "../ui/Chatbox";
+import { CameraFocusManager } from "../gameObjects/CameraFocusManager";
 
 const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
   color: "#fff",
@@ -30,6 +34,7 @@ const tooltipTextStyle : Phaser.Types.GameObjects.Text.TextStyle = {
 }
 
 export class PlayerStatisticHUD extends BaseScene {
+  leaderboardPanel: LeaderboardPanel | undefined;
   constructor() {
     super(CONSTANT.SCENES.HUD_SCORE);
   }
@@ -52,12 +57,51 @@ export class PlayerStatisticHUD extends BaseScene {
     this.load.html("soldierSelectionWidget", "../html/soldier-selection.html");
     this.load.html("phaserChatbox", "../html/phaser-chatbox.html");
     this.load.html("game-action-panel", "../html/game-action-panel.html");
+    this.load.html("leaderboard-panel", "../html/match-leaderboard-panel.html");
     this.scene.bringToTop();
   }
+
+  appendToLeaderboard(players : Array<PlayerState>) {
+    const listEl = document.getElementById("leaderboard-list");
+    if(!listEl)
+      return;
+    listEl.innerHTML = "";
+    // sort players by score (descending)
+    const sorted = [...players].sort((a, b) => b.score - a.score);
+
+    sorted.forEach((p, idx) => {
+      const item = document.createElement("div");
+      item.className = "leaderboard-item";
+
+      item.innerHTML = `
+        <div class="leaderboard-rank">#${idx + 1}</div>
+        <div class="leaderboard-name">${p.name}</div>
+        <div class="leaderboard-score">${p.score}</div>
+      `;
+
+      listEl.appendChild(item);
+    });
+  }
+
+  updateLeaderboardUI() {
+    const networkManager = container.resolve(NetworkManager);
+    const state = networkManager.getState()
+    if(!state) return;
+    const players = Array.from(state.players.values());
+    this.leaderboardPanel?.update(players.map(player => (
+        {
+          name: player.name,
+          score: player.score,
+          playerId: player.id
+        }
+      )
+    ));
+  }
+
   create() {
     var gameScene = this.scene.get<GameScene>(CONSTANT.SCENES.GAME);
-    var networkManager = this.registry.get("networkManager") as NetworkManager;
-    networkManager.startPing()
+    const networkManager = container.resolve(NetworkManager)
+    
     $("#soldierSelectionDiv #option_villager").on("click", () => {
       console.log("trying to create villager");
     });
@@ -193,13 +237,27 @@ export class PlayerStatisticHUD extends BaseScene {
       }
     );
 
-    gameScene.AddSceneEvent(
-      PacketType.ByServer.PONG_RESPONSE,
-      (data : any) => {
-        this.GetObject<Phaser.GameObjects.Text>('obj_text_ping')?.setText(`PING:${Date.now() - (networkManager?.lastPingTimestamp || Date.now()-999)!}`);
-      }
-    )
+    networkManager.latencyService.onLatencyChange((data: number) => {
+      this.GetObject<Phaser.GameObjects.Text>('obj_text_ping')?.setText(`PING:${data}!}`);
+    });
 
+    gameScene.AddSceneEvent(
+      PacketType.ByServer.PLAYER_SCORE_UPDATED,
+      ({
+        playerId,
+        score
+      }: {
+        playerId: string;
+        score: number;
+      }) => {
+        try {
+          console.log('received event for player score update ', playerId, score);
+          this.updateLeaderboardUI();
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    );
     gameScene.AddSceneEvent(
       PacketType.ByServer.PLAYER_RESOURCE_UPDATED,
       ({
@@ -213,11 +271,7 @@ export class PlayerStatisticHUD extends BaseScene {
       }) => {
         try {
           if (playerId === playerId)
-            resourceText.setText(
-              `Economy: ${resources.toFixed(
-                2
-              )} ( change/sec: ${resourceGrowthRate.toFixed(2)})`
-            );
+            resourceText.setText(`Economy: ${resources.toFixed(2)} (change/sec: ${resourceGrowthRate.toFixed(2)})`);
         } catch (err) {
           console.log(err);
         }
@@ -243,72 +297,15 @@ export class PlayerStatisticHUD extends BaseScene {
     });
 
     // Add chatbox DOM element to HUD
-    const chatbox = this.add.dom(10, this.sys.canvas.height - 320).createFromCache("phaserChatbox");
-    chatbox.setOrigin(0, 0);
-    chatbox.setDepth(10000); // Always on top
-    this.AddObject(chatbox, "obj_chatbox");
+    const chatbox = new Chatbox(this); // this.add.dom(10, this.sys.canvas.height - 320).createFromCache("phaserChatbox");
+    this.AddObject(chatbox.getDom(), "obj_chatbox");
 
     // Chatbox event handling
-    const chatInput = chatbox.getChildByID("phaser-chatbox-input") as HTMLInputElement | null;
-    const chatSendBtn = chatbox.getChildByID("phaser-chatbox-send") as HTMLButtonElement | null;
-    const chatMessages = chatbox.getChildByID("phaser-chatbox-messages") as HTMLDivElement | null;
-    const chatboxContainer = chatbox.getChildByID("phaser-chatbox-container") as HTMLDivElement | null;
-    const chatboxHeader = chatbox.getChildByID("phaser-chatbox-header") as HTMLDivElement | null;
-    const chatboxBody = chatbox.getChildByID("phaser-chatbox-body") as HTMLDivElement | null;
-    const chatboxMinBtn = chatbox.getChildByID("phaser-chatbox-min-btn") as HTMLButtonElement | null;
-    const chatboxResize = chatbox.getChildByID("phaser-chatbox-resize") as HTMLDivElement | null;
-    const MAX_LENGTH = 60;
     let isChatFocused = false;
     let isDragging = false;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
-    // --- Draggable chatbox logic ---
-    if (chatboxHeader && chatboxContainer) {
-      chatboxHeader.addEventListener("mousedown", (e: MouseEvent) => {
-        isDragging = true;
-        dragOffsetX = e.clientX - chatbox.x;
-        dragOffsetY = e.clientY - chatbox.y;
-        document.body.style.userSelect = "none";
-      });
-      window.addEventListener("mousemove", (e: MouseEvent) => {
-        if (isDragging) {
-          chatbox.x = Math.max(0, Math.min(this.sys.canvas.width - chatbox.width, e.clientX - dragOffsetX));
-          chatbox.y = Math.max(0, Math.min(this.sys.canvas.height - chatbox.height, e.clientY - dragOffsetY));
-        }
-      });
-      window.addEventListener("mouseup", () => {
-        isDragging = false;
-        document.body.style.userSelect = "";
-      });
-    }
-    // --- Minimize/maximize logic ---
-    if (chatboxMinBtn && chatboxBody) {
-      chatboxMinBtn.addEventListener("click", () => {
-        if (chatboxBody.style.display === "none") {
-          chatboxBody.style.display = "flex";
-          chatboxMinBtn.textContent = "–";
-        } else {
-          chatboxBody.style.display = "none";
-          chatboxMinBtn.textContent = "+";
-        }
-      });
-    }
-    // --- Focus/blur logic to block gameplay input ---
-    if (chatInput) {
-      chatInput.addEventListener("focus", () => {
-        isChatFocused = true;
-      });
-      chatInput.addEventListener("blur", () => {
-        isChatFocused = false;
-      });
-      chatInput.addEventListener("keydown", function(e) {
-        // Prevent propagation so space and other keys work in chat
-        e.stopPropagation();
-        if (e.key === "Enter") {
-          sendChat();
-        }
-      });
-    }
+
     // --- Block gameplay input when chat is focused ---
     const originalInputEnabled = this.input.enabled;
     this.input.on("gameout", () => {
@@ -324,68 +321,31 @@ export class PlayerStatisticHUD extends BaseScene {
     this.input.keyboard?.on("keydown", blockIfChatFocused, this);
     this.input.on("pointerdown", blockIfChatFocused, this);
     // --- Chat send logic ---
-    function appendChatMessage(msg: string, sender: string) {
-      if (!chatMessages) return;
-      const div = document.createElement("div");
-      div.innerHTML = `<b>${sender}:</b> ${msg}`;
-      chatMessages.appendChild(div);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-    function sendChat() {
-      if (!chatInput) return;
-      let value = chatInput.value.trim();
-      if (!value) return;
-      if (value.length > MAX_LENGTH) value = value.slice(0, MAX_LENGTH);
-      networkManager.sendEventToServer(PacketType.ByClient.CLIENT_SENT_CHAT, { message: value });
-      chatInput.value = "";
-    }
-    if (chatSendBtn) chatSendBtn.addEventListener("click", sendChat);
     // Listen for new chat messages from the server (reuse GameScene event)
-    gameScene.AddSceneEvent(PacketType.ByServer.NEW_CHAT_MESSAGE, (data: { message: string, senderName: string }) => {
-      appendChatMessage(data.message, data.senderName);
+    gameScene.AddSceneEvent(PacketType.ByServer.NEW_CHAT_MESSAGE, (data: { message: string, senderId: string }) => {
+      chatbox.appendChatMessage(gameScene, data.message, data.senderId);
     });
     // --- Resizable chatbox logic ---
-    if (chatboxResize && chatboxContainer && chatboxBody && chatMessages) {
-      let resizing = false;
-      let startX = 0, startY = 0, startW = 0, startH = 0;
-      chatboxResize.addEventListener("mousedown", (e: MouseEvent) => {
-        resizing = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        startW = chatboxContainer.offsetWidth;
-        startH = chatboxContainer.offsetHeight;
-        document.body.style.userSelect = "none";
-        e.preventDefault();
-        e.stopPropagation();
-      });
-      window.addEventListener("mousemove", (e: MouseEvent) => {
-        if (resizing) {
-          let newW = Math.max(220, Math.min(600, startW + (e.clientX - startX)));
-          let newH = Math.max(80, Math.min(400, startH + (e.clientY - startY)));
-          chatboxContainer.style.width = newW + "px";
-          chatboxContainer.style.height = newH + "px";
-          // Adjust messages area height
-          const headerH = chatboxHeader ? chatboxHeader.offsetHeight : 32;
-          const inputRowH = chatInput ? chatInput.offsetHeight + 16 : 40;
-          if (chatMessages) {
-            chatMessages.style.height = Math.max(40, newH - headerH - inputRowH - 40) + "px";
-          }
-        }
-      });
-      window.addEventListener("mouseup", () => {
-        resizing = false;
-        document.body.style.userSelect = "";
-      });
-    }
+
 
     // --- Add Game Action Panel DOM (bottom right, draggable) ---
     const panelX = this.sys.canvas.width - 10;
     const panelY = this.sys.canvas.height - 260;
+    this.leaderboardPanel = new LeaderboardPanel(this);
+    this.leaderboardPanel.onPlayerClick((playerId: string) => {
+      const player = container.resolve(NetworkManager).getState()?.players.get(playerId);
+      if(!player) return;
+      const focusManager = container.resolve(CameraFocusManager);
+      focusManager.focusOnEntity(gameScene, playerId);
+    });
+    this.AddObject(this.leaderboardPanel.getDom(), "obj_leaderboard");
+
     const gameActionPanel = this.add.dom(panelX, panelY).createFromCache("game-action-panel");
     gameActionPanel.setOrigin(1, 0);
     gameActionPanel.setDepth(10000);
     gameActionPanel.setScrollFactor(0);
     this.AddObject(gameActionPanel, "obj_gameActionPanel");
+
     // Drag logic
     const panelContainer = gameActionPanel.getChildByID("game-action-panel-container");
     const panelDrag = gameActionPanel.getChildByID("game-action-panel-drag");

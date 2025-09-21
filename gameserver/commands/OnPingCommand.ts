@@ -7,6 +7,8 @@ import { PacketType } from "../../common/PacketType";
 export class OnPingCommand extends Command<SessionRoom, CommandPayload> {
   execute({ client, message, gameManager }: CommandPayload) {
     const sessionId = client.sessionId;
-    client.send(PacketType.ByServer.PONG_RESPONSE, {});
+    client.send(PacketType.ByServer.PONG_RESPONSE, {
+      timestamp: message.timestamp
+    });
   }
 }

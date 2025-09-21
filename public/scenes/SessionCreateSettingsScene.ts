@@ -1,10 +1,10 @@
-import { NetworkManager } from "../NetworkManager";
+import { NetworkManager } from "../network/NetworkManager";
 import { BaseScene } from "./BaseScene"; // Adjust import path
 import CONSTANT from "../constant";
+import { container } from "tsyringe";
 
 export class SessionCreateSettingsScene extends BaseScene {
   settingsDOM: Phaser.GameObjects.DOMElement | undefined;
-  networkManager!: NetworkManager;
 
   constructor() {
     super(CONSTANT.SCENES.SESSIONHOSTSETTINGS);
@@ -15,8 +15,6 @@ export class SessionCreateSettingsScene extends BaseScene {
   }
 
   create(): void {
-    this.networkManager = this.registry.get("networkManager") as NetworkManager;
-
     this.settingsDOM = this.add
       .dom(600, 200)
       .createFromCache("sessionSettingsUI");
@@ -77,14 +75,12 @@ export class SessionCreateSettingsScene extends BaseScene {
 
   async onCreateSessionClick() {
     try {
-      const networkManager = this.registry.get(
-        "networkManager"
-      ) as NetworkManager;
+      const networkManager = container.resolve(NetworkManager);
       if (!networkManager) {
         throw new Error("NetworkManager is not defined");
       }
 
-      const playerName = networkManager.getPlayerName();
+      const playerName = networkManager.identityService.getPlayerName();
       const domRoot = this.settingsDOM!.node as HTMLElement;
 
       const minSlider = domRoot.querySelector("#minPlayers") as HTMLInputElement;

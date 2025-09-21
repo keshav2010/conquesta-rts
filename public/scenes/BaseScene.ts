@@ -1,9 +1,10 @@
 import Phaser from "phaser";
-import { NetworkManager } from "../NetworkManager";
+import { NetworkManager } from "../network/NetworkManager";
 import { ClientStateManager } from "../ClientStateManager";
 import CONSTANT from "../constant";
 import { nanoid } from "nanoid";
 import { ETileType, getTileType } from "../../gameserver/schema/TilemapState";
+import { container } from "tsyringe";
 interface Destroyable {
   destroy: Function;
 }
@@ -41,19 +42,9 @@ export class BaseScene extends Phaser.Scene {
 
     this.registry.set("stateManager", new ClientStateManager());
 
-    const networkManager = this.registry.get("networkManager") as
-      | NetworkManager
-      | undefined;
+    const networkManager = container.resolve(NetworkManager);
 
-    networkManager?.isSocketConnected() &&
-      networkManager?.disconnectGameServer();
-
-    if (networkManager) return;
-
-    this.registry.set(
-      "networkManager",
-      new NetworkManager(this.game, this.registry)
-    );
+    networkManager.isSocketConnected() && networkManager.disconnectGameServer();
   }
 
   updateTilemap(

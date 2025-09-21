@@ -2,20 +2,19 @@ import CONSTANTS from "../constant";
 import SessionStateClientHelpers from "../helpers/SessionStateClientHelpers";
 import LoadingBar from "../gameObjects/LoadingBar";
 import SAT from "sat";
-import { NetworkManager } from "../NetworkManager";
+import { NetworkManager } from "../network/NetworkManager";
 import { BackgroundHighlight } from "../gameObjects/BackgroundHighlight";
 import { SelectableSceneEntity } from "../scenes/BaseScene";
+import { container } from "tsyringe";
 const GAMEEVENTS = CONSTANTS.GAMEEVENTS;
 
-export class BaseSoldier
+export abstract class BaseSoldier
   extends Phaser.GameObjects.Sprite
   implements SelectableSceneEntity
 {
   readonly id: string;
   initialParam: any;
   color: Phaser.Math.Vector3;
-  expectedPositionX: number;
-  expectedPositionY: number;
   hp: LoadingBar;
   highlightBackground: BackgroundHighlight;
   DEBUGTEXT: Phaser.GameObjects.Text;
@@ -52,8 +51,6 @@ export class BaseSoldier
 
     scene.events.on("update", this.update, this);
     this.color = new Phaser.Math.Vector3().copy(color);
-    this.expectedPositionX = x;
-    this.expectedPositionY = y;
     this.setPosition(x, y);
 
     this.scale = 1;
@@ -90,9 +87,7 @@ export class BaseSoldier
     return new SAT.Vector(data.x, data.y);
   }
   renderDebugMarkers() {
-    const networkManager = this?.scene?.registry?.get(
-      "networkManager"
-    ) as NetworkManager;
+    const networkManager = container.resolve(NetworkManager);
     if (!networkManager) {
       console.log(
         `Could not find network-manager for soldier :${this.id}, most likely is deleted from scene (value of scene : ${this.scene})`

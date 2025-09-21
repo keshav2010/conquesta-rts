@@ -1,7 +1,7 @@
 import { PacketType } from "../../common/PacketType";
 import { PlayerState } from "../../gameserver/schema/PlayerState";
 import { SoldierState } from "../../gameserver/schema/SoldierState";
-import { NetworkManager } from "../NetworkManager";
+import { NetworkManager } from "../network/NetworkManager";
 import CONSTANT from "../constant";
 const { GAMEEVENTS } = CONSTANT;
 import SessionStateClientHelpers from "../helpers/SessionStateClientHelpers";
@@ -12,17 +12,16 @@ import SpinnerPlugin from "phaser3-rex-plugins/templates/spinner/spinner-plugin.
 import $ from "jquery";
 import { CaptureFlag } from "../gameObjects/CaptureFlag";
 import { PlayerCastle } from "../gameObjects/PlayerCastle";
+import { container } from "tsyringe";
+import { DefaultPointerModeStrategy } from "../core/gamePointerStrategies/DefaultPointerModeStrategy";
+import { FlagPlacementPointerModeStrategy } from "../core/gamePointerStrategies/FlagPlacementPointerStrategy";
+import { DataKey } from "../config/DataKey";
+import { PointerModeContext } from "../core/gamePointerStrategies/PointerModeContext";
 
-var selectorColor = 0xffff00;
-var selectorThickness = 2;
-var selectorDraw = false;
-
-var pointerDownWorldSpace: { x: any; y: any } | null = null;
-
-var networkManager: NetworkManager;
 const SendChatMessage = () => {
   try {
     var messageText = $("#chat-message").val();
+    const networkManager = container.resolve(NetworkManager)
     networkManager.sendEventToServer(PacketType.ByClient.CLIENT_SENT_CHAT, {
       message: messageText,
     });
@@ -65,220 +64,20 @@ export const Textures = {
   DELETE_BUTTON: "img_deleteButton"
 } as const;
 
-export const DataKey = {
-  SELECTED_OBJECTS_MAP: "selectedObjectsMap",
-  TILEMAP: "map1",
-  SHOW_CAPTURE_FLAG_PLACEHOLDER: "showCaptureFlagPlaceholder",
-};
-
 enum PointerMode {
   DEFAULT = "default",
   FLAG_PLACEMENT = "flagPlacementMode",
 }
 
-interface IPointerModeAction {
-  [key: string]: {
-    [key: string]: (scene: GameScene, pointer: Phaser.Input.Pointer) => void;
-  };
-}
-
-const PointerModeAction: IPointerModeAction = {
-  [PointerMode.DEFAULT]: {
-    pointerdown: function (scene: GameScene, pointer: Phaser.Input.Pointer) {
-      const selectorGraphics = scene.GetObject<Phaser.GameObjects.Graphics>(
-        "obj_selectorGraphics"
-      );
-      if (!selectorGraphics) {
-        return;
-      }
-
-      const selectedObjectsMap = scene.data.get(
-        DataKey.SELECTED_OBJECTS_MAP
-      ) as Map<string, BaseSoldier | CaptureFlag>;
-
-      if (pointer.button === 0) {
-        //lmb
-        selectorGraphics.clear();
-        selectedObjectsMap.clear();
-
-        selectorDraw = true;
-        pointerDownWorldSpace = {
-          x: pointer.worldX,
-          y: pointer.worldY,
-        };
-      }
-      //mmb
-      else if (pointer.button === 1) {
-        networkManager.sendEventToServer(
-          PacketType.ByClient.SOLDIER_CREATE_REQUESTED,
-          {
-            soldierType: "SPEARMAN",
-          }
-        );
-      }
-      else if (pointer.button === 2) {
-        /* RMB Pressed => Player either attempting to move selected soldiers or commanding them to attack enemy unit */
-        if (selectedObjectsMap.size < 1) return;
-
-        const circle = new Phaser.Geom.Circle(
-          pointer.worldX,
-          pointer.worldY,
-          16
-        );
-        selectorGraphics.strokeCircleShape(circle);
-
-        const soldiers =
-          scene.GetObjectsWithKeyPrefix<Spearman>(`obj_spearman_`);
-
-        const targetSoldiersArray = soldiers.filter(
-          (soldier) => soldier.playerId !== networkManager.getClientId()
-        );
-
-        let targetSoldierSelected = null;
-        for (const soldier of targetSoldiersArray) {
-          const bound = soldier.getBounds();
-          selectorGraphics.strokeRectShape(bound);
-          if (Phaser.Geom.Intersects.CircleToRectangle(circle, bound)) {
-            targetSoldierSelected = soldier;
-            break;
-          }
-        }
-
-        // no target soldier selected, is a move request instead.
-        if (!targetSoldierSelected) {
-          networkManager.sendEventToServer(
-            PacketType.ByClient.SOLDIER_MOVE_REQUESTED,
-            {
-              soldierIds: Array.from(selectedObjectsMap.values()).map(
-                (v) => v.id
-              ),
-              expectedPositionX: pointer.worldX,
-              expectedPositionY: pointer.worldY,
-            }
-          );
-          return;
-        }
-
-        const selectedSoldierIds = Array.from(selectedObjectsMap.values()).map(
-          (soldier) => soldier.id
-        );
-
-        networkManager.sendEventToServer(
-          PacketType.ByClient.SOLDIER_ATTACK_REQUESTED,
-          {
-            soldiers: selectedSoldierIds,
-            targetPlayerId: targetSoldierSelected.playerId,
-            targetUnitId: targetSoldierSelected.id,
-          }
-        );
-      }
-    },
-    pointermove: function (scene: GameScene, pointer: Phaser.Input.Pointer) {
-      const selectorGraphics = scene.GetObject<Phaser.GameObjects.Graphics>(
-        "obj_selectorGraphics"
-      )!;
-      if (!pointer.isDown) {
-        selectorGraphics.clear();
-        return;
-      }
-      if (selectorDraw && pointer.button === 0) {
-        selectorGraphics.clear();
-        selectorGraphics.lineStyle(selectorThickness, selectorColor, 1);
-
-        let rect = new Phaser.Geom.Rectangle(
-          pointerDownWorldSpace?.x,
-          pointerDownWorldSpace?.y,
-          pointer.worldX - pointerDownWorldSpace?.x,
-          pointer.worldY - pointerDownWorldSpace?.y
-        );
-        if (rect.width < 0) {
-          rect.x += rect.width;
-          rect.width = Math.abs(rect.width);
-        }
-        if (rect.height < 0) {
-          rect.y += rect.height;
-          rect.height = Math.abs(rect.height);
-        }
-        selectorGraphics.strokeRectShape(rect);
-
-        const playerId = networkManager.getClientId();
-        if (!playerId) {
-          return;
-        }
-        // get all selectable items for a player
-        const soldiers = scene.GetObjectsWithKeyPrefix<Spearman>(
-          `obj_spearman_${playerId}_`
-        );
-        const captureFlags = scene.GetObjectsWithKeyPrefix<CaptureFlag>(
-          `obj_captureFlag_${playerId}`
-        );
-
-        const selectables: (SelectableSceneEntity & Phaser.GameObjects.Sprite)[] = [
-          ...soldiers,
-          ...captureFlags,
-        ];
-        selectables.forEach((selectableSprite) => {
-          let bound = selectableSprite.getBounds();
-          if (Phaser.Geom.Intersects.RectangleToRectangle(bound, rect)) {
-            selectableSprite.markSelected();
-          } else {
-            selectableSprite.markUnselected();
-          }
-        });
-      } else if (pointer.button === 2 && pointer.isDown) {
-        //mmb down
-        scene.cameras.main.scrollX -=
-          (pointer.x - pointer.prevPosition.x) / scene.cameras.main.zoom;
-        scene.cameras.main.scrollY -=
-          (pointer.y - pointer.prevPosition.y) / scene.cameras.main.zoom;
-      }
-    },
-    pointerup: function (scene: GameScene, event: Phaser.Input.Pointer) {
-      const selectorGraphics = scene.GetObject<Phaser.GameObjects.Graphics>(
-        "obj_selectorGraphics"
-      )!;
-      selectorDraw = false;
-      selectorGraphics.clear();
-      pointerDownWorldSpace = null;
-    },
-    pointerout: function (scene: GameScene, event: Phaser.Input.Pointer) { },
-  },
-  [PointerMode.FLAG_PLACEMENT]: {
-    pointerdown: function (scene: GameScene, pointer: Phaser.Input.Pointer) {
-      const buttonPressed = pointer.button; // (0,1,2) => (lmb, mmb, rmb)
-      if (buttonPressed !== 0) {
-        scene.data.set(DataKey.SHOW_CAPTURE_FLAG_PLACEHOLDER, {
-          visibility: false,
-        });
-        scene.AddObject(scene.add.particles(pointer.worldX, pointer.worldY));
-        return;
-      }
-      networkManager.sendEventToServer(
-        PacketType.ByClient.CAPTURE_FLAG_CREATE_REQUESTED,
-        {
-          x: pointer.worldX,
-          y: pointer.worldY,
-        }
-      );
-    },
-    pointerup: function (scene: GameScene, pointer: Phaser.Input.Pointer) { },
-    pointerout: function (scene: GameScene, pointer: Phaser.Input.Pointer) { },
-    pointermove: function (scene: GameScene, pointer: Phaser.Input.Pointer) {
-      scene
-        .GetObject<Phaser.GameObjects.Sprite>("obj_captureFlagPlaceholder")
-        ?.setPosition(pointer.worldX, pointer.worldY);
-    },
-  },
-};
 
 export class GameScene extends BaseScene {
   canvasWidth: number;
   canvasHeight: number;
   controls?: Phaser.Cameras.Controls.SmoothedKeyControl;
   rexSpinner: SpinnerPlugin | undefined;
-
-  pointerMode: PointerMode = PointerMode.DEFAULT;
-  constructor() {
+  pointerModeContext: PointerModeContext | undefined;
+  constructor(
+  ) {
     super(CONSTANT.SCENES.GAME);
     this.canvasWidth = 1962;
     this.canvasHeight = 1962;
@@ -341,6 +140,8 @@ export class GameScene extends BaseScene {
   }
 
   onSoldierSelected(soldierId: string) {
+    const networkManager = container.resolve(NetworkManager);
+
     const playerId = networkManager.getClientId();
     if (!playerId) {
       return;
@@ -365,6 +166,8 @@ export class GameScene extends BaseScene {
   }
 
   onCaptureFlagSelected(flagId: string) {
+    const networkManager = container.resolve(NetworkManager);
+
     const playerId = networkManager.getClientId();
     if (!playerId) {
       return;
@@ -388,6 +191,8 @@ export class GameScene extends BaseScene {
     const phaserSceneObject = this.GetObject<Spearman>(
       `obj_spearman_${playerId}_${soldierId}`
     );
+    const networkManager = container.resolve(NetworkManager);
+
     const state = networkManager.getState();
     if (!state) return;
     const playerState = SessionStateClientHelpers.getPlayer(state, playerId);
@@ -425,9 +230,12 @@ export class GameScene extends BaseScene {
   }
 
   create() {
-    networkManager = this.registry.get("networkManager") as NetworkManager;
+    const networkManager = container.resolve(NetworkManager);
     const GameSessionState = networkManager.getState();
 
+    this.pointerModeContext = container.resolve(PointerModeContext);
+    this.pointerModeContext.setStrategy(container.resolve(DefaultPointerModeStrategy));
+    
     if (!GameSessionState) {
       networkManager.disconnectGameServer();
       return;
@@ -486,15 +294,19 @@ export class GameScene extends BaseScene {
     });
 
     this.AddInputEvent("pointerdown", (pointer: Phaser.Input.Pointer) => {
-      PointerModeAction[this.pointerMode]["pointerdown"](this, pointer);
+      this.pointerModeContext?.getStrategy().pointerdown(this, pointer);
     });
 
     this.AddInputEvent("pointerup", (pointer: Phaser.Input.Pointer) => {
-      PointerModeAction[this.pointerMode]["pointerup"](this, pointer);
+      this.pointerModeContext?.getStrategy().pointerup(this, pointer);
     });
 
     this.AddInputEvent("pointermove", (pointer: any) => {
-      PointerModeAction[this.pointerMode]["pointermove"](this, pointer);
+      this.pointerModeContext?.getStrategy().pointermove(this, pointer);
+    });
+
+    this.AddInputEvent("pointerout", (pointer: any) => {
+      this.pointerModeContext?.getStrategy().pointerout(this, pointer);
     });
 
     this.AddSceneEvent(PacketType.ByServer.GAME_OVER, (data: { winningPlayerId: string }) => {
@@ -555,9 +367,9 @@ export class GameScene extends BaseScene {
 
     this.AddSceneEvent(
       PacketType.ByServer.NEW_CHAT_MESSAGE,
-      (data: { message: string; senderName: string; sender: string }) => {
-        const { message, senderName } = data;
-        addNewChatMessage(message, senderName);
+      (data: { message: string; senderId: string }) => {
+        const { message, senderId } = data;
+        addNewChatMessage(message, senderId);
       }
     );
 
@@ -592,23 +404,11 @@ export class GameScene extends BaseScene {
     );
 
     this.AddSceneEvent(CONSTANT.GAMEEVENTS.CREATE_CAPTURE_FLAG_BUTTON_CLICKED, () => {
-      this.pointerMode = PointerMode.FLAG_PLACEMENT;
       this.GetObject<Phaser.GameObjects.Sprite>(
         "obj_captureFlagPlaceholder"
       )?.setVisible(true);
+      this.pointerModeContext?.setStrategy(container.resolve(FlagPlacementPointerModeStrategy));
     });
-
-    this.data.events.on(
-      `changedata-${DataKey.SHOW_CAPTURE_FLAG_PLACEHOLDER}`,
-      (_: any, value: any) => {
-        if (value.visibility === false)
-          this.pointerMode = PointerMode.DEFAULT;
-
-        this.GetObject<Phaser.GameObjects.Sprite>(
-          "obj_captureFlagPlaceholder"
-        )?.setVisible(false);
-      }
-    );
 
     const state = networkManager.getState();
     if (!state) return;
@@ -658,6 +458,15 @@ export class GameScene extends BaseScene {
         })
       );
 
+      this.AddStateChangeListener(
+        player.listen("score", (value: number) => {
+          this.events.emit(PacketType.ByServer.PLAYER_SCORE_UPDATED, {
+            playerId: player.id,
+            score: value
+          })
+        })
+      );
+  
       this.AddStateChangeListener(
         player.soldiers.onAdd((soldier, key) => {
           this.onSoldierAdded(soldier, player);
@@ -917,6 +726,10 @@ export class GameScene extends BaseScene {
       window.removeEventListener('offline', showNetworkOverlay);
       window.removeEventListener('online', hideNetworkOverlay);
     });
+  }
+
+  getSceneCamera() {
+    return this.cameras.main;
   }
 
   update(delta: number) {

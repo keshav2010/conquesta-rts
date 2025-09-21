@@ -41,6 +41,10 @@ export class PlayerState extends Schema implements ISceneItem {
 
   @type("number") castleHealth: number = 100;
 
+  @type("number") score: number = 0;
+
+  leaderboardUpdate = 5; // every 5 second
+  timeUntilLastScoreUpdate = 0; 
   // key: SoldierId
   @type({ map: SoldierState }) soldiers: MapSchema<SoldierState> =
     new MapSchema<SoldierState>();
@@ -76,6 +80,7 @@ export class PlayerState extends Schema implements ISceneItem {
     this.readyStatus = false;
     this.pos = new VectorState();
     this.castleHealth = 100;
+    this.score = 0;
     this.soldiers = new MapSchema<SoldierState>();
     this.spawnRequestDetailMap = new MapSchema<SpawnRequest>();
     this.spawnRequestQueue = new ArraySchema<string>();
@@ -208,6 +213,25 @@ export class PlayerState extends Schema implements ISceneItem {
     return newSoldier.id;
   }
 
+  calculatePlayerScore(): number {
+    const soldiersScore = this.soldiers.size * 10;        // 10 pts per soldier
+    const resourcesScore = this.resources * 1;           // 1 pt per resource
+    const castleHealthScore = this.castleHealth * 5;     // 5 pts per castle HP
+    const resourceGrowthScore = this.resourceGrowthRateHz * 20; // bonus for growth rate
+    const captureFlagsScore = this.captureFlags.length * 50;     // 50 pts per flag
+
+    const totalScore =
+      soldiersScore +
+      resourcesScore +
+      castleHealthScore +
+      resourceGrowthScore +
+      captureFlagsScore;
+
+    
+    this.score =  totalScore;
+    return this.score;
+  }
+
   public tick(
     deltaTime: number,
     gameStateManager: GameStateManagerType,
@@ -229,6 +253,12 @@ export class PlayerState extends Schema implements ISceneItem {
       this.resourceGrowthRateHz - 0.1 * deltaTime,
       0.2 * this.captureFlags.length
     );
+    
+    this.timeUntilLastScoreUpdate += deltaTime;
+    if(this.timeUntilLastScoreUpdate >= this.leaderboardUpdate){
+      this.timeUntilLastScoreUpdate = 0;
+      this.calculatePlayerScore();
+    }
   }
 
   public updatePosition(x: number, y: number) {

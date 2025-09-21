@@ -14,6 +14,7 @@ export interface SessionOptions {
 export class SessionState extends Schema {
   // Key : sessionId
   @type({ map: PlayerState }) players = new MapSchema<PlayerState>();
+  
   @type("string") sessionState:
     | "SESSION_LOBBY_STATE"
     | "SPAWN_SELECTION_STATE"
@@ -62,6 +63,7 @@ export class SessionState extends Schema {
   public removePlayer(sessionId: string, gameManager: GameStateManagerType) {
     const player = this.players.get(sessionId);
     if (!player) {
+      console.log(`[removePlayer] not found player by id ${sessionId}.`)
       return;
     }
 
@@ -72,7 +74,9 @@ export class SessionState extends Schema {
     player.captureFlags.clear();
 
     this.players.delete(sessionId);
+    gameManager.playerMap.delete(sessionId);
     this.tilemap.updateOwnershipMap(this.getPlayers());
+    console.log(`[removePlayer] successfully removed player ${sessionId}`)
   }
   public countReadyPlayers() {
     return [...this.players.values()].reduce((acc, curr) => {

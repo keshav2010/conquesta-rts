@@ -1,8 +1,9 @@
 import CONSTANT from "../constant";
 import { BaseScene } from "./BaseScene";
-import { NetworkError, NetworkManager } from "../NetworkManager";
+import { NetworkError, NetworkManager } from "../network/NetworkManager";
 import { addBackgroundImage } from "../helpers/addBackgroundImage";
 import SpinnerPlugin from "phaser3-rex-plugins/templates/spinner/spinner-plugin.js";
+import { container } from "tsyringe";
 
 const URL = `${window.location.host}`;
 
@@ -37,7 +38,7 @@ export class MenuScene extends BaseScene {
     spinner.setVisible(false);
     this.AddObject(spinner, "obj_spinner");
 
-    let networkManager = this.registry.get("networkManager") as NetworkManager;
+    let networkManager = container.resolve(NetworkManager)
     addBackgroundImage(this, "background");
     this.AddObject(this.add.text(100, 20, `Conquesta V1.0.1`), "obj_introText");
 
@@ -57,8 +58,8 @@ export class MenuScene extends BaseScene {
     const tutorialBtn = playerForm.getChildByName("btnTutorial");
 
     let playerNameInput = playerForm.getChildByName("player-name-input");
-    if (networkManager.getPlayerName().length > 0)
-      (playerForm.getChildByName("player-name-input") as any).value = networkManager.getPlayerName();
+    if (networkManager.identityService.getPlayerName().length > 0)
+      (playerForm.getChildByName("player-name-input") as any).value = networkManager.identityService.getPlayerName();
 
     playerNameInput?.addEventListener("input", (event) => {
       var inputName = <Element & { value: string }>(
@@ -67,7 +68,7 @@ export class MenuScene extends BaseScene {
       if (!inputName) return;
       if (inputName.value !== "") {
         let name = inputName.value.trim().replace(" ", "-");
-        networkManager.setPlayerName(name);
+        networkManager.identityService.setPlayerName(name);
         this.GetObject<Phaser.GameObjects.Text>("obj_introText")?.setText(
           `Welcome: ${name}`
         );

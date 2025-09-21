@@ -13,7 +13,6 @@ dotenv.config();
 
 import express from "express";
 import { createServer } from "http";
-import { nanoid } from 'nanoid';
 import { matchMaker, RedisDriver, RedisPresence, Server, ServerOptions } from "colyseus";
 import { SessionRoom } from "./SessionRoom";
 import { playground } from "@colyseus/playground";
@@ -23,9 +22,11 @@ import fs from "fs";
 import { readFile } from "fs/promises";
 import basicAuth from "express-basic-auth";
 import { ITiled2DMap } from "../common/ITiled2DMap";
+import limiter from "./middleware/ratelimiter";
 
 const username = process.env.ADMIN_USERNAME as string;
 const password = process.env.ADMIN_PASSWORD as string;
+
 const basicAuthMiddleware = basicAuth({
   users: {
     [username]: password,
@@ -38,6 +39,7 @@ const basicAuthMiddleware = basicAuth({
 const PORT = Number(process.env.PORT) + Number(process.env.NODE_APP_INSTANCE || 0);
 
 const app = express();
+app.use(limiter);
 app.use(express.json());
 
 app.use(express.static("dist"));
@@ -49,8 +51,9 @@ app.use(express.static("static"));
  * It is recommended to protect this route with a password
  * Read more: https://docs.colyseus.io/tools/monitor/#restrict-access-to-the-panel-using-a-password
  */
-app.use("/monitor", basicAuthMiddleware, monitor());
-app.use("/playground", basicAuthMiddleware, playground);
+app.use("/monitor", limiter, basicAuthMiddleware, monitor());
+app.use("/playground", limiter, basicAuthMiddleware, playground);
+app.use("/matchmake", limiter);
 
 const cachedMap = new Map<
   string,
@@ -71,6 +74,7 @@ async function loadMap(filename: string) {
 app.get('/liveness', async (req, res) => {
   return res.status(200).send();
 })
+
 app.get("/", async (req, res) => {
   try {
     const pathName = path.resolve(__dirname, "dist");
@@ -124,21 +128,25 @@ const redisOption = {
   password: process.env.REDIS_PASSWORD
 }
 
-console.log({ENV: process.env.NODE_ENV})
 const opts : ServerOptions = process.env.NODE_ENV === 'production' ? {
   presence: new RedisPresence(redisOption),
   driver: new RedisDriver(redisOption),
 } : {};
+
 const gameServer = new Server({
   server: createServer(app),
   ...opts,
   publicAddress: publicAddressForProcess,
+  // called when creating a new room
   selectProcessIdToCreateRoom: async function (roomName: string, clientOptions: any) {
     
-    console.log('[selectProcessIdToCreateRoom] : Selecting Process in order to create/query a room.')
+    console.log('[selectProcessIdToCreateRoom] : Selecting Process in order to create/query a room.', clientOptions)
 
     // process with least connection atm is picked for room creation
     const fetchedProcesses = await matchMaker.stats.fetchAll();
+    if (!fetchedProcesses.length) {
+      throw new Error("No available processes to create room");
+    }
 
     console.log(`   > [selectProcessIdToCreateRoom]: Found ${fetchedProcesses.length} processes.`); 
     const pid = fetchedProcesses
