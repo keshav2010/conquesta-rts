@@ -31,7 +31,6 @@ export class NetworkError extends Error {
 }
 
 @singleton()
-@injectable()
 export class NetworkManager {
   client: Colyseus.Client;
   room: Colyseus.Room<SessionState> | null;
@@ -79,9 +78,9 @@ export class NetworkManager {
     this.latencyService.start(this.room);
     this.eventRelay.start(this.room, this.game);
 
-    this.room.onLeave((code) => {
+    this.room.onLeave(async (code) => {
       console.log(`Leaving Room ${this.room?.name}, code: ${code}`);
-      this.teardownRoom();
+      await this.teardownRoom();
     });
 
     this.room.onError((code, message) => {
@@ -106,7 +105,7 @@ export class NetworkManager {
 
   async disconnectGameServer() {
     try {
-      this.teardownRoom();
+      await this.teardownRoom();
     } catch (error) {
       throw new NetworkError(
         NetworkErrorCode.ERROR_DURING_ROOM_DISCONNECT,
@@ -159,7 +158,7 @@ export class NetworkManager {
     }
   }
 
-  private teardownRoom() {
+  private async teardownRoom() {
     this.latencyService.stop();
     this.eventRelay.stop();
     localStorage.removeItem("colyseus:reconnectionToken");
@@ -168,7 +167,7 @@ export class NetworkManager {
       this.room.removeAllListeners();
 
       try {
-        this.room.leave(); // optional safeguard, in case not called yet
+        await this.room.leave(); // optional safeguard, in case not called yet
       } catch (err) {
         console.warn("[teardownRoom] error during leave:", err);
       }
