@@ -1,9 +1,9 @@
-import { injectable } from "tsyringe";
+import { injectable, singleton } from "tsyringe";
 import { container } from "tsyringe";
 import { NetworkManager } from "../network/NetworkManager";
 import Phaser from "phaser";
 
-@injectable()
+@singleton()
 export class CameraFocusManager {
     private networkManager: NetworkManager;
 

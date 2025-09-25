@@ -1,4 +1,4 @@
-import { injectable, container, inject } from "tsyringe";
+import { injectable, container, inject, singleton } from "tsyringe";
 import { PacketType } from "../../../common/PacketType";
 import { CaptureFlag } from "../../gameObjects/CaptureFlag";
 import { NetworkManager } from "../../network/NetworkManager";
@@ -8,17 +8,13 @@ import { IPointerStrategy } from "./pointerStrategy";
 import { DataKey } from "../../config/DataKey";
 import { PointerModeContext } from "./PointerModeContext";
 
-@injectable()
+@singleton()
 export class DefaultPointerModeStrategy implements IPointerStrategy {
   readonly name: string = "default-strategy"
   private selectorDraw: boolean = false;
   private selectorColor: number = 0xffffff;
   private readonly selectorThickness: number = 1;
   private pointerDownWorldSpace: {x:number, y:number } | null = null;
-  constructor(
-    @inject(PointerModeContext) private context: PointerModeContext
-  ){
-  }
 
   pointerdown(scene: GameScene, pointer: Phaser.Input.Pointer): void {
     console.log(`[DefaultPointerStrategy] BTN:${pointer.button} pointerdown`)
@@ -96,8 +92,6 @@ export class DefaultPointerModeStrategy implements IPointerStrategy {
   }
 
   pointermove(scene: GameScene, pointer: Phaser.Input.Pointer): void {
-    // console.log(`[DefaultPointerStrategy] BTN:${pointer.button} pointermove`)
-
     const selectorGraphics = scene.GetObject<Phaser.GameObjects.Graphics>(
       "obj_selectorGraphics"
     )!;

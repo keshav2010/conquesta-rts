@@ -246,7 +246,6 @@ export class SpawnSelectionScene extends BaseScene {
 
   update(delta: number) {
     const networkManager = container.resolve(NetworkManager);
-
     const GameSessionState = networkManager.getState();
     if (!GameSessionState) {
       networkManager.disconnectGameServer();
@@ -255,9 +254,9 @@ export class SpawnSelectionScene extends BaseScene {
     if (GameSessionState.sessionState !== "SPAWN_SELECTION_STATE") {
       return;
     }
-    const max = 10; // fallback to 10 seconds if maxCountdown is not available
+
     const val = (GameSessionState.countdown || 0) / 1000;
-    this.timerBar?.update(val, max);
+    this.timerBar?.update(val, GameSessionState.spawnSelectionTimer);
     this.controls?.update(delta);
   }
 

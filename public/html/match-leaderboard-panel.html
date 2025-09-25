@@ -1,10 +1,11 @@
 <style>
   .leaderboard-container {
-    width: 420px;
-    margin: 20px auto;
+    max-width: 350px;
+    min-width: 250px;
+    margin: 10px auto;
     padding: 0; /* remove padding, move to body section */
     background: rgba(255,255,255,0.35);
-    border-radius: 18px;
+    border-radius: 5px;
     box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -47,10 +48,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 12px;
+    padding: 4px 12px;
     margin-bottom: 6px;
     background: rgba(255,255,255,0.6);
-    border-radius: 12px;
+    border-radius: 5px;
     box-shadow: 0 1px 6px rgba(0,0,0,0.08);
     font-size: 16px;
     font-weight: 600;
@@ -90,5 +91,11 @@
   </div>
   <div class="leaderboard-list" id="leaderboard-list">
     <!-- Rows injected dynamically -->
+     <div class="leaderboard-item">
+        <span class="leaderboard-rank">1</span>
+        <span class="leaderboard-name"> test2</span>
+        <span class="leaderboard-score">21</span>
+     </div>
+     
   </div>
 </div>

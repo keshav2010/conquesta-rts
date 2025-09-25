@@ -3,7 +3,6 @@ import * as Colyseus from "colyseus.js";
 import Phaser from "phaser";
 
 @singleton()
-@injectable()
 export class EventRelayService {
   private room?: Colyseus.Room;
   private game?: Phaser.Game;

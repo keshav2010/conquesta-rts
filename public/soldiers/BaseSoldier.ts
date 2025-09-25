@@ -6,6 +6,7 @@ import { NetworkManager } from "../network/NetworkManager";
 import { BackgroundHighlight } from "../gameObjects/BackgroundHighlight";
 import { SelectableSceneEntity } from "../scenes/BaseScene";
 import { container } from "tsyringe";
+import { BloodStain } from "../gameObjects/BloodStain";
 const GAMEEVENTS = CONSTANTS.GAMEEVENTS;
 
 export abstract class BaseSoldier
@@ -73,6 +74,7 @@ export abstract class BaseSoldier
       this.highlightBackground.destroy();
       this.DEBUGTEXT.destroy(true);
       this.debugBrush.destroy(true);
+      new BloodStain(this.scene, this.x, this.y);
       scene.events.off("update", this.update, this);
     });
   }

@@ -1,8 +1,8 @@
-import { container, injectable } from "tsyringe";
+import { container, injectable, singleton } from "tsyringe";
 import { IPointerStrategy } from "./pointerStrategy";
 import { DefaultPointerModeStrategy } from "./DefaultPointerModeStrategy";
 
-@injectable()
+@singleton()
 export class PointerModeContext {
     private strategy!: IPointerStrategy;
 
