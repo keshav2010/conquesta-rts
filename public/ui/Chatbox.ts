@@ -22,7 +22,7 @@ export default class Chatbox {
         const chatboxBody = this.dom.getChildByID("phaser-chatbox-body") as HTMLDivElement | null;
         const chatboxMinBtn = this.dom.getChildByID("phaser-chatbox-min-btn") as HTMLButtonElement | null;
         
-        chatSendBtn?.addEventListener("click", this.sendChat);
+        chatInput && chatSendBtn?.addEventListener("click", (_) => this.sendChat(chatInput));
 
         const node = this.dom.node as HTMLElement;
         this.listContainer = node.querySelector("#leaderboard-list") as HTMLElement;
@@ -97,8 +97,7 @@ export default class Chatbox {
     }
 
 
-    sendChat() {
-        const chatInput = this.dom.getChildByID("phaser-chatbox-input") as HTMLInputElement | null;
+    sendChat(chatInput: HTMLInputElement) {
         if (!chatInput) return;
         let value = chatInput.value.trim();
         if (!value) return;

@@ -22,6 +22,8 @@ export class SessionState extends Schema {
     | "BATTLE_END_STATE" = "SESSION_LOBBY_STATE";
 
   @type("number") countdown: number = SERVER_CONFIG.COUNTDOWN_DEFAULT;
+  @type("number") spawnSelectionTimer: number = SERVER_CONFIG.COUNTDOWN_DEFAULT;
+
   @type("string") mapId: string = "map1";
   @type(TilemapState) tilemap = new TilemapState();
 
@@ -32,9 +34,15 @@ export class SessionState extends Schema {
   constructor(sessionOpts : SessionOptions) {
     super();
     this.sessionName = sessionOpts.sessionName;
+    
     this.countdown = sessionOpts.spawnSelectionTimer;
+    this.spawnSelectionTimer = sessionOpts.spawnSelectionTimer*1000;
+
     this.minPlayers = sessionOpts.minPlayers || SERVER_CONFIG.MINIMUM_PLAYERS_PER_SESSION;
     this.maxPlayers = sessionOpts.maxPlayers;
+    console.log('Session State Created ', {
+      ...sessionOpts
+    })
   }
 
   public addPlayer(

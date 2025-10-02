@@ -1,4 +1,4 @@
-import { injectable, container, inject } from "tsyringe";
+import { injectable, container, inject, singleton } from "tsyringe";
 import { NetworkManager } from "../../network/NetworkManager";
 import { GameScene } from "../../scenes/GameScene";
 import { PacketType } from "../../../common/PacketType";
@@ -9,17 +9,14 @@ import { DataKey } from "../../config/DataKey";
 
 
 
-@injectable()
+@singleton()
 export class FlagPlacementPointerModeStrategy implements IPointerStrategy {
   readonly name: string = "flag-policy";
   pointerdown(scene: GameScene, pointer: Phaser.Input.Pointer): void {
-    console.log(`[FlagPlacementPointerStrategy] BTN:${pointer.button}(${typeof pointer.button}) pointerdown`)    
-
+    console.log(`[FlagPlacementPointerStrategy] BTN:${pointer.button}(${typeof pointer.button}) pointerdown`)
     if (pointer.button !== 0) {
-      scene.data.set(DataKey.SHOW_CAPTURE_FLAG_PLACEHOLDER, { visibility: false });
       scene.GetObject<Phaser.GameObjects.Sprite>("obj_captureFlagPlaceholder")?.setVisible(false);
       container.resolve(PointerModeContext).setStrategy(container.resolve(DefaultPointerModeStrategy));
-      scene.AddObject(scene.add.particles(pointer.worldX, pointer.worldY));
       return;
     }
     container.resolve(NetworkManager).sendEventToServer(

@@ -24,12 +24,12 @@ export default {
     const allClientsLoaded = sessionState.countLoadedPlayers() >= sessionState.players.size;
 
     if (!allClientsLoaded) {
-      sessionState.countdown = SERVER_CONFIG.COUNTDOWN;
+      sessionState.countdown = sessionState.spawnSelectionTimer;
     }
     if (allClientsLoaded && atleastMinimumPlayersJoined) {
       sessionState.countdown = Math.max(0, sessionState.countdown - delta);
       if (sessionState.countdown === 0) {
-        sessionState.countdown = SERVER_CONFIG.COUNTDOWN_SPAWN_SELECTIONS;
+        sessionState.countdown = sessionState.spawnSelectionTimer;
         gameStateManager.stateMachine.controller.send("StartMatch");
       }
       return;
@@ -50,7 +50,7 @@ export default {
     try {
       if (sessionState.sessionState !== "SPAWN_SELECTION_STATE") {
         sessionState.sessionState = "SPAWN_SELECTION_STATE";
-        sessionState.countdown = SERVER_CONFIG.COUNTDOWN_SPAWN_SELECTIONS;
+        sessionState.countdown = sessionState.spawnSelectionTimer;
         await room.unlock();
       }
       //in seconds

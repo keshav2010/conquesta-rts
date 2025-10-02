@@ -153,7 +153,7 @@ export class BaseScene extends Phaser.Scene {
 
   DestroyObjects() {
     this.objectMap.forEach((obj, key) => {
-      console.log(`[Destroy] ${key}`);
+      // console.log(`[Destroy] ${key}`);
       this.DestroyObject(obj);
     });
     this.objectMap.clear();
@@ -162,7 +162,7 @@ export class BaseScene extends Phaser.Scene {
 
   DestroySceneEvents() {
     for (let eventType of this.registeredSceneEvents) {
-      console.log(`Removing Listener for: ${eventType}`);
+      // console.log(`Removing Listener for: ${eventType}`);
       this.events.removeListener(eventType);
     }
     this.registeredSceneEvents = new Set();
@@ -170,7 +170,7 @@ export class BaseScene extends Phaser.Scene {
 
   DestroyInputEvents() {
     for (let eventType of this.registeredInputEvents) {
-      console.log(`Removing Listener for: ${eventType}`);
+      // console.log(`Removing Listener for: ${eventType}`);
       this.input.removeListener(eventType);
     }
     this.registeredInputEvents = new Set();
