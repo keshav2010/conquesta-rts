@@ -22,7 +22,7 @@ export class SpawnRequest extends Schema {
     this.requestId = requestId;
     this.unitType = soldierType;
     this.count = count;
-    this.countdown = 10;
+    this.countdown = 1;
   }
 }
 

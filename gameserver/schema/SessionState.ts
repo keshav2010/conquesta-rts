@@ -36,7 +36,7 @@ export class SessionState extends Schema {
     this.sessionName = sessionOpts.sessionName;
     
     this.countdown = sessionOpts.spawnSelectionTimer;
-    this.spawnSelectionTimer = sessionOpts.spawnSelectionTimer;
+    this.spawnSelectionTimer = sessionOpts.spawnSelectionTimer*1000;
 
     this.minPlayers = sessionOpts.minPlayers || SERVER_CONFIG.MINIMUM_PLAYERS_PER_SESSION;
     this.maxPlayers = sessionOpts.maxPlayers;
