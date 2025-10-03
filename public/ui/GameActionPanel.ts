@@ -36,7 +36,11 @@ export default class GameActionPanel {
     const panelContainer = node.querySelector(".game-action-panel-container") as HTMLElement;
 
     // Attach draggable
-    new Draggable(scene, this.dom, "#game-action-panel-drag");
+    const draggableBehaviour = new Draggable(scene, this.dom, "#game-action-panel-drag");
+    draggableBehaviour.onDrag(() => {
+      const btnCreateSoldier = this.getButton("btn-create-soldier");
+      btnCreateSoldier && this.repositionSoldierPopup(btnCreateSoldier)
+    })
 
     // Bind buttons
     const btnDisconnect = this.getButton("btn-disconnect");
@@ -136,11 +140,41 @@ export default class GameActionPanel {
   private getButton(id: string): HTMLElement | null {
     return this.dom.getChildByID(id) as HTMLElement | null;
   }
+  
+  private repositionSoldierPopup(btn: HTMLElement) {
+    if (!this.soldierPopup || this.soldierPopup.style.display === "none") return;
+
+    const canvasRect = this.scene.sys.game.canvas.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    const popupRect = this.soldierPopup.getBoundingClientRect();
+
+    // Start position: to the right of the button (relative to panel container)
+    let left = btn.offsetLeft + btn.offsetWidth + 8;
+    let top = btn.offsetTop;
+
+    // If it overflows to the right of canvas → flip to left side
+    if (btnRect.right + popupRect.width > canvasRect.right) {
+      left = btn.offsetLeft - popupRect.width - 8;
+    }
+
+    // If it overflows bottom of canvas → push it up
+    if (btnRect.bottom + popupRect.height > canvasRect.bottom) {
+      top = btn.offsetTop - (popupRect.height - btn.offsetHeight);
+    }
+
+    // Clamp to top inside the panel
+    if (top < 0) {
+      top = 0;
+    }
+
+    this.soldierPopup.style.left = `${left}px`;
+    this.soldierPopup.style.top = `${top}px`;
+  }
 
   private openSoldierPopup(btn: HTMLElement) {
     if (this.soldierPopup) {
       this.soldierPopup.style.display = "block";
-      this.soldierPopup.style.top = btn.offsetTop + "px";
+      this.repositionSoldierPopup(btn);
     }
   }
 

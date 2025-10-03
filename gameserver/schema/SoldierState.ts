@@ -25,7 +25,7 @@ export class SoldierState extends Schema implements ISceneItem, IBoidAgent {
   // pos requested by client.
   @type(VectorState) targetPosition: VectorState = new VectorState();
 
-  @type("string") type: SoldierType = "SPEARMAN";
+  @type("string") type: SoldierType = SoldierType.SPEARMAN;
 
   @type("number") radius: number = 16;
 

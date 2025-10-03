@@ -30,7 +30,7 @@ export class Spearman extends BaseSoldier {
       color,
       playerId
     );
-    this.soldierType = "SPEARMAN";
+  this.soldierType = SoldierType.SPEARMAN;
   }
   onClicked() {}
   update(deltaTime: number) {

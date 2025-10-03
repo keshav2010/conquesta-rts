@@ -211,27 +211,3 @@
     </div>
   </div>
 </div>
-
-<script>
-  const soldierBtn = document.getElementById("btn-create-soldier");
-  const soldierPopup = document.getElementById("soldier-popup");
-  const closePopup = document.getElementById("soldier-popup-close");
-
-  soldierBtn.addEventListener("click", () => {
-    soldierPopup.style.display = "block";
-    soldierPopup.style.top = soldierBtn.offsetTop + "px";
-  });
-
-  closePopup.addEventListener("click", () => {
-    soldierPopup.style.display = "none";
-  });
-
-  document.querySelectorAll(".soldier-card").forEach(card => {
-    card.addEventListener("click", () => {
-      const soldier = card.dataset.soldier;
-      if (soldier) {
-        soldierPopup.style.display = "none";
-      }
-    });
-  });
-</script>

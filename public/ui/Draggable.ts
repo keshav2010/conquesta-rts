@@ -8,11 +8,13 @@ export class Draggable {
   private dragOffsetX = 0;
   private dragOffsetY = 0;
 
+  // 🔥 custom callback
+  private onDragCallback: (() => void) | null = null;
+
   constructor(scene: Phaser.Scene, dom: Phaser.GameObjects.DOMElement, handleSelector?: string) {
     this.scene = scene;
     this.dom = dom;
 
-    // If selector is provided, restrict drag to that handle
     this.handle = handleSelector
       ? (dom.node as HTMLElement).querySelector(handleSelector)
       : (dom.node as HTMLElement);
@@ -33,8 +35,12 @@ export class Draggable {
       if (this.isDragging) {
         this.dom.x = e.clientX - this.dragOffsetX;
         this.dom.y = e.clientY - this.dragOffsetY;
-        // reset CSS transform so Phaser controls actual positioning
         (this.dom.node as HTMLElement).style.transform = "translate(0,0)";
+
+        // 🔥 notify anyone listening
+        if (this.onDragCallback) {
+          this.onDragCallback();
+        }
       }
     });
 
@@ -42,5 +48,8 @@ export class Draggable {
       this.isDragging = false;
       document.body.style.userSelect = "";
     });
+  }
+  onDrag(cb: () => void) {
+    this.onDragCallback = cb;
   }
 }

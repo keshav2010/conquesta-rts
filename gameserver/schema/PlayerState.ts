@@ -14,7 +14,7 @@ export type GameStateManagerType = GameStateManager<PlayerState>;
 
 export class SpawnRequest extends Schema {
   @type("string") requestId: string = "";
-  @type("string") unitType: SoldierType = "SPEARMAN";
+  @type("string") unitType: SoldierType = SoldierType.SPEARMAN;
   @type("number") count: number = 1;
   @type("number") countdown: number = 10;
   constructor(requestId: string, soldierType: SoldierType, count: number = 1) {

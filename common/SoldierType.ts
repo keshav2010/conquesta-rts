@@ -1,4 +1,7 @@
-export type SoldierType = "SPEARMAN" | "KNIGHT";
+export enum SoldierType {
+  SPEARMAN = 'SPEARMAN',
+  KNIGHT = 'KNIGHT'
+}
 export const SoldierTypeConfig: {
   [K in SoldierType]: {
     cost: number;
@@ -7,13 +10,13 @@ export const SoldierTypeConfig: {
     health: number;
   };
 } = {
-  SPEARMAN: {
+  [SoldierType.SPEARMAN]: {
     cost: 10,
     speed: 60,
     damage: 20,
     health: 100,
   },
-  KNIGHT: {
+  [SoldierType.KNIGHT]: {
     cost: 25,
     speed: 45,
     damage: 37,

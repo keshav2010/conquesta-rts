@@ -2,6 +2,7 @@
 import { Command } from "@colyseus/command";
 import { SessionRoom } from "../SessionRoom";
 import { CommandPayload } from "./CommandPayloadType";
+import { SoldierType } from "../../common/SoldierType";
 export class OnSoldierCreateCommand extends Command<
   SessionRoom,
   CommandPayload
@@ -11,7 +12,7 @@ export class OnSoldierCreateCommand extends Command<
       if (process.env.NODE_ENV === "development") {
         this.state
           .getPlayer(client.id)
-          ?.addNewSoldier("SPEARMAN", gameManager!.scene);
+          ?.addNewSoldier(SoldierType.SPEARMAN, gameManager!.scene);
         return;
       }
       let lengthBefore = this.state.getPlayer(client.id)?.spawnRequestDetailMap
