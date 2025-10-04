@@ -12,19 +12,21 @@ export class SoldierUI {
     this.highlight = new BackgroundHighlight(scene, soldier, color);
 
     this.debugText = scene.add.text(
-      soldier.x, soldier.y + 40,
-      `${id.substr(0, 15)}\nhealth:${this.hpBar.getValue()}`,
-      { font: "12px Arial", color: "yellow" }
+      soldier.x, soldier.y + soldier.height,
+      `${id.substr(0, 15)}
+      \n
+      health:${this.hpBar.getValue().toFixed(0)}`,
+      { font: "12px Arial", color: "yellow", align: 'left' }
     );
-    this.debugText.setOrigin(0.5).setDepth(10);
+    this.debugText.setOrigin(0).setDepth(10);
   }
 
   updatePosition(soldier: Phaser.GameObjects.Sprite) {
-    this.debugText.setPosition(soldier.x, soldier.y + 40);
+    this.debugText.setPosition(soldier.x, soldier.y + soldier.height);
   }
 
   updateText(state: string, health: number) {
-    this.debugText.setText(`${state}\nhealth:${health}`);
+    this.debugText.setText(`${state}\nhealth:${health.toFixed(0)}`);
   }
 
   draw() {
