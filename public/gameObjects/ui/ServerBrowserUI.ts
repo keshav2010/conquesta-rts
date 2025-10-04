@@ -1,6 +1,6 @@
 import { RoomAvailable } from "colyseus.js";
-import constant from "../constant";
-import { NetworkManager } from "../network/NetworkManager";
+import constant from "../../constant";
+import { NetworkManager } from "../../network/NetworkManager";
 
 interface ServerSession {
   roomId: string;

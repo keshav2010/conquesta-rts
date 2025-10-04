@@ -5,8 +5,8 @@ import { PacketType } from "../../common/PacketType";
 import SessionStateClientHelpers from "../helpers/SessionStateClientHelpers";
 import SAT from "sat";
 import { PlayerCastle } from "../gameObjects/PlayerCastle";
-import SpawnTimerBar from "../ui/SpawnTimerBar";
 import { container } from "tsyringe";
+import SpawnTimerBar from "../gameObjects/ui/SpawnTimerBar";
 
 var selectorGraphics: Phaser.GameObjects.Graphics;
 var selectorColor = 0xffff00;
