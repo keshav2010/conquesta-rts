@@ -1,5 +1,5 @@
 import SAT from "sat";
-import { BaseSoldier } from "./soldiers/BaseSoldier";
+import { BaseSoldier } from "./gameObjects/soldiers/BaseSoldier";
 export class Player {
   type: string;
   soldiers: Set<BaseSoldier>;

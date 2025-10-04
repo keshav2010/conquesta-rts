@@ -41,7 +41,9 @@ export default class LoadingBar extends Phaser.GameObjects.Graphics {
   }
   draw() {
     this.clear();
-    this.copyPosition(this.parent);
+
+    const position = new Phaser.Math.Vector2(this.parent.x + this.width/2, this.parent.y - this.parent.height - 2);
+    this.copyPosition(position);
 
     //  BG
     this.fillStyle(0x000000);

@@ -1,20 +1,19 @@
+
+import $ from "jquery";
 import CONSTANT from "../constant";
 import { BaseScene } from "./BaseScene";
 import { PacketType } from "../../common/PacketType";
-
-const { SoldierType } = require("../../common/SoldierType");
-import $ from "jquery";
+import { SoldierType } from "../../common/SoldierType";
 import { GameScene, Textures } from "./GameScene";
 import { NetworkManager } from "../network/NetworkManager";
 import { PlayerState } from "../../gameserver/schema/PlayerState";
-import { Spearman } from "../soldiers/Spearman";
-import CONSTANTS from "../constant";
+import { Spearman } from "../gameObjects/soldiers/Spearman";
 import { CaptureFlag } from "../gameObjects/CaptureFlag";
 import { container } from "tsyringe";
-import LeaderboardPanel from "../ui/LeaderboardPanel";
-import Chatbox from "../ui/Chatbox";
 import { CameraFocusManager } from "../gameObjects/CameraFocusManager";
-import GameActionPanel from "../ui/GameActionPanel";
+import Chatbox from "../gameObjects/ui/Chatbox";
+import GameActionPanel from "../gameObjects/ui/GameActionPanel";
+import LeaderboardPanel from "../gameObjects/ui/LeaderboardPanel";
 
 const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
   color: "#fff",

@@ -1,12 +1,12 @@
-import { ServerBrowserUI } from "../ui/ServerBrowserUI";
 import { BaseScene } from "./BaseScene";
 import CONSTANT from "../constant";
 import { addBackgroundImage } from "../helpers/addBackgroundImage";
 import { NetworkManager } from "../network/NetworkManager";
 import { container } from "tsyringe";
+import { ServerBrowserUI } from "../gameObjects/ui/ServerBrowserUI";
 
 export class SessionBrowserScene extends BaseScene {
-  serverBrowserUI: ServerBrowserUI | undefined;
+  serverBrowserUI ?: ServerBrowserUI;
 
   constructor() {
     super(CONSTANT.SCENES.SESSIONBROWSER);

@@ -1,10 +1,10 @@
 import Phaser from "phaser";
 import { Draggable } from "./Draggable";
-import { PacketType } from "../../common/PacketType";
+import { PacketType } from "../../../common/PacketType";
 import { container } from "tsyringe";
-import { NetworkManager } from "../network/NetworkManager";
+import { NetworkManager } from "../../network/NetworkManager";
 import { Resizable } from "./Resizable";
-import { CameraFocusManager } from "../gameObjects/CameraFocusManager";
+import { CameraFocusManager } from "../../gameObjects/CameraFocusManager";
 
 export default class Chatbox {
     private dom: Phaser.GameObjects.DOMElement;
