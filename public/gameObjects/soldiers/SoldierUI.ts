@@ -13,7 +13,7 @@ export class SoldierUI {
 
     this.debugText = scene.add.text(
       soldier.x, soldier.y + 40,
-      `${id.substr(0, 15)}\nhealth:0`,
+      `${id.substr(0, 15)}\nhealth:${this.hpBar.getValue()}`,
       { font: "12px Arial", color: "yellow" }
     );
     this.debugText.setOrigin(0.5).setDepth(10);

@@ -76,9 +76,6 @@ export abstract class BaseSoldier
     this.ui.draw();
     this.ui.updatePosition(this);
 
-    // Example: you’d get soldierState from session
-    const state = "idle"; 
-    this.ui.updateText(state, this.stats.getHealth());
 
     // debug rendering
     const serverPos = this.getServerPosition();
@@ -86,13 +83,20 @@ export abstract class BaseSoldier
     const networkManager = container.resolve(NetworkManager);
     if(!networkManager)
       return;
-    const playerState = SessionStateClientHelpers.getPlayer(networkManager.getState()!, this.playerId!);
+
+    const sessionState = networkManager.getState();
+    if(!sessionState)
+      return;
+    const playerState = SessionStateClientHelpers.getPlayer(sessionState, this.playerId!);
     if(!playerState)
         return;
-    const soldierState = SessionStateClientHelpers.getSoldier(networkManager.getState()!, playerState, this.id);
+    const soldierState = SessionStateClientHelpers.getSoldier(sessionState, playerState, this.id);
     if(!soldierState)
       return;
-    
+
+    // Example: you’d get soldierState from session
+    const state = soldierState.currentState; 
+    this.ui.updateText(state, this.stats.getHealth());
     this.debugRenderer.render(this, serverPos, { x: soldierState.expectedPosition.x, y: soldierState.expectedPosition.y });
   }
 
