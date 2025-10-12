@@ -1,0 +1,33 @@
+# fly.toml app configuration file generated for conquesta-rts on 2025-10-13T01:34:33+05:30
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'conquesta-rts'
+primary_region = 'bom'
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  TICKRATE = '24'
+  COUNTDOWN = '5000'
+  COUNTDOWN_SPAWN_SELECTION='10000'
+  COUNTDOWN_DEFAULT='15000'
+  MINIMUM_PLAYERS_PER_SESSION='2'
+  COLYSEUS_SERVER_URL='conquesta-rts.fly.dev'
+  PORT='3000'
+  PUBLIC_ADDRESS='conquesta-rts.fly.dev'
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
