@@ -35,8 +35,6 @@ spec:
               value: "15000"
             - name: COUNTDOWN_DEFAULT
               value: "15000"
-            - name: MAX_SESSION_PER_WORKER
-              value: "1"
             - name: MINIMUM_PLAYERS_PER_SESSION
               value: "1"
             - name: PORT

@@ -8,7 +8,6 @@ export const SERVER_CONFIG = {
     process.env.COUNTDOWN_SPAWN_SELECTION || 5000
   ),
   COUNTDOWN_DEFAULT: Number(process.env.COUNTDOWN_DEFAULT || 15000),
-  MAX_SESSION_PER_WORKER: Number(process.env.MAX_SESSION_PER_WORKER || 10),
   MINIMUM_PLAYERS_PER_SESSION: Number(
     process.env.MINIMUM_PLAYERS_PER_SESSION
   ),
