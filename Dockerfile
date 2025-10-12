@@ -6,4 +6,5 @@ RUN npm install -g pm2@5.4.2
 COPY . .
 RUN npm run build
 RUN ls -ltr
-CMD ["npm", "run", "deploy-node"]
+CMD ["npm", "run", "start"]
+
