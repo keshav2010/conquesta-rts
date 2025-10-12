@@ -3,7 +3,7 @@ import { PacketType } from "../../../common/PacketType";
 import { CaptureFlag } from "../../gameObjects/CaptureFlag";
 import { NetworkManager } from "../../network/NetworkManager";
 import { GameScene } from "../../scenes/GameScene";
-import { Spearman } from "../../soldiers/Spearman";
+import { Spearman } from "../../gameObjects/soldiers/Spearman";
 import { IPointerStrategy } from "./pointerStrategy";
 import { DataKey } from "../../config/DataKey";
 import { PointerModeContext } from "./PointerModeContext";

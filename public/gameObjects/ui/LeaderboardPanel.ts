@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { Draggable } from "./Draggable";
 import { container } from "tsyringe";
-import { NetworkManager } from "../network/NetworkManager";
+import { NetworkManager } from "../../network/NetworkManager";
 interface PlayerScore {
   name: string;
   playerId: string;

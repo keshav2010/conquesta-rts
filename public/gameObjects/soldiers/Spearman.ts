@@ -1,4 +1,4 @@
-import { SoldierType } from "../../common/SoldierType";
+import { SoldierType } from "../../../common/SoldierType";
 import { BaseSoldier } from "./BaseSoldier";
 import Phaser from "phaser";
 export class Spearman extends BaseSoldier {

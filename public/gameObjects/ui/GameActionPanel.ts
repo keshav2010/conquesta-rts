@@ -1,9 +1,8 @@
 import Phaser from "phaser";
 import { Draggable } from "./Draggable";
-import { NetworkManager } from "../network/NetworkManager";
 import { container } from "tsyringe";
-import CONSTANTS from '../constant';
-
+import { NetworkManager } from "../../network/NetworkManager";
+import CONSTANTS from '../../constant'
 export interface SoldierOption {
   key: string;
   name: string;
