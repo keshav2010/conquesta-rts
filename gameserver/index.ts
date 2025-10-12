@@ -159,6 +159,6 @@ const gameServer = new Server({
 });
 gameServer.define("session_room", SessionRoom);
 
-gameServer.listen(PORT, undefined, undefined, () => {
+gameServer.listen(Number(PORT) || 3000 , '0.0.0.0', undefined, () => {
   console.log("SERVER WILL BE LISTENING ON PORT ", PORT, 'with ws-server ', publicAddressForProcess);
 });
